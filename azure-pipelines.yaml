@@ -1,0 +1,161 @@
+name: $(coreVersion).$(Date:yy)$(DayOfYear).$(Rev:r)
+
+variables:
+  coreVersion: 1
+  buildConfiguration: "Release"
+  imageRepository: "emberstack/sftp"
+  DOCKER_CLI_EXPERIMENTAL: 'enabled'
+
+trigger:
+  branches:
+    include:
+      - "*"
+
+stages:
+
+  - stage: build
+    displayName: "Build"
+    jobs:
+      - job: build
+        displayName: "Build Job"
+        pool:
+          vmImage: "Ubuntu-16.04"
+        steps:
+          - script: |
+             mkdir -p artifacts/helm
+             mkdir -p artifacts/kubectl
+            workingDirectory: '$(Build.ArtifactStagingDirectory)'
+            displayName: 'Create Artifacts directories'
+
+          - task: HelmInstaller@0
+            displayName: 'Install Helm'
+            inputs:
+              helmVersion: 2.13.1
+              kubectlVersion: 1.10.11
+
+          - script: 'helm lint'
+            workingDirectory: deploy/helm/sftp
+            displayName: 'helm lint'
+
+          - task: HelmDeploy@0
+            displayName: 'helm package'
+            inputs:
+              connectionType: None
+              command: package
+              chartPath: deploy/helm/sftp
+              chartVersion: '$(Build.BuildNumber)'
+              destination: '$(Build.ArtifactStagingDirectory)/artifacts/helm'
+
+          - script: 'helm template --name sftp sftp > $(Build.ArtifactStagingDirectory)/artifacts/kubectl/sftp-$(Build.BuildNumber).yaml'
+            workingDirectory: deploy/helm
+            displayName: 'helm template'
+
+          - publish: '$(Build.ArtifactStagingDirectory)/artifacts/helm'
+            artifact: 'helm'
+
+          - publish: '$(Build.ArtifactStagingDirectory)/artifacts/kubectl'
+            artifact: 'kubectl'
+
+          - task: Docker@2
+            displayName: "Build amd64 image"
+            inputs:
+              containerRegistry: "Emberstack Docker Hub"
+              repository: $(imageRepository)
+              Dockerfile: src/Dockerfile
+              command: build
+              buildContext: src
+              tags: "build-$(Build.BuildNumber)-amd64"
+
+          - task: Docker@2
+            displayName: "Push images"
+            inputs:
+              containerRegistry: "Emberstack Docker Hub"
+              repository: $(imageRepository)
+              command: push
+              tags: |
+                build-$(Build.BuildNumber)-amd64
+
+          - task: Docker@2
+            displayName: "Docker Hub Login"
+            inputs:
+              containerRegistry: "Emberstack Docker Hub"
+              command: login
+
+          - script: |
+              docker manifest create  $(imageRepository):build-$(Build.BuildNumber) $(imageRepository):build-$(Build.BuildNumber)-amd64
+              docker manifest inspect $(imageRepository):build-$(Build.BuildNumber)
+              docker manifest push    $(imageRepository):build-$(Build.BuildNumber)
+            displayName: "Create and push multi-arch manifest"
+
+
+  - stage: release
+    displayName: "Release"
+    dependsOn: 'build'
+    condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'Manual'), in(variables['Build.SourceBranchName'], 'master'))
+    jobs:
+      - job: release
+        displayName: "Release Job"
+        pool:
+          vmImage: "Ubuntu-16.04"
+        variables:
+          - group: "OpenSource.GitHub"
+        steps:
+          - checkout: none
+
+          - download: current
+            artifact: 'helm'
+
+          - download: current
+            artifact: 'kubectl'            
+
+          - task: Docker@2
+            displayName: "Docker Login"
+            inputs:
+              containerRegistry: "Emberstack Docker Hub"
+              command: login
+
+          - task: HelmInstaller@0
+            displayName: 'Install Helm'
+            inputs:
+              helmVersion: 2.13.1
+              kubectlVersion: 1.10.11    
+
+          - script: |
+              docker pull $(imageRepository):build-$(Build.BuildNumber)-amd64
+              docker manifest create $(imageRepository):release-$(Build.BuildNumber) $(imageRepository):build-$(Build.BuildNumber)-amd64
+              docker manifest push $(imageRepository):release-$(Build.BuildNumber)
+              docker manifest create $(imageRepository):latest $(imageRepository):build-$(Build.BuildNumber)-amd64
+              docker manifest push $(imageRepository):latest
+            displayName: 'docker pull, tag and push'
+
+          - script: |
+              git config --global user.email "$(emberstack-agent-email)"
+              git config --global user.name "$(emberstack-agent-name)"
+              git clone https://$(emberstack-agent-username):$(emberstack-agent-pat)@github.com/EmberStack/helm-charts.git
+              
+              mkdir -p helm-charts/charts
+              cp $(Pipeline.Workspace)/helm/sftp-$(Build.BuildNumber).tgz  helm-charts/charts
+              
+              cd helm-charts
+              rm index.yaml
+              helm repo index ./
+              git add .
+              git status
+              git commit -m "Added sftp-$(Build.BuildNumber).tgz"
+              git push
+            displayName: 'Add chart to GitHub repository'            
+
+          - script: |
+              mkdir -p github
+              cp $(Pipeline.Workspace)/kubectl/sftp-$(Build.BuildNumber).yaml  github/reflector.yaml
+            displayName: 'Prepare GitHub Artifacts'
+
+          - task: GitHubRelease@1
+            displayName: 'GitHub release (create)'
+            inputs:
+              gitHubConnection: GitHub
+              repositoryName: 'EmberStack/docker-sftp'
+              tagSource: manual
+              title: 'Release v$(Build.BuildNumber)'
+              releaseNotesSource: input
+              assets: '$(System.DefaultWorkingDirectory)/github/*.*'
