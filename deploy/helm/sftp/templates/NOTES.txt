@@ -1,0 +1,1 @@
+SFTP can now be used for secure file transfers. You can connect to your service using any SFTP client.
