@@ -32,24 +32,32 @@ spec:
             - name: ssh
               containerPort: 22
               protocol: TCP
+          {{- if or .Values.configuration .Values.storage.volumeMounts }}
           volumeMounts:
+          {{- if .Values.configuration }}
             - name: sftp-json
               mountPath: "/app"
               readOnly: true
+          {{- end }}
           {{- with .Values.storage.volumeMounts }}
           {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
+      {{- if or .Values.configuration .Values.storage.volumes }}
       volumes:
+      {{- if .Values.configuration }}
         - name: sftp-json
           secret:
             secretName: {{ include "sftp.fullname" . }}
             items:
               - key: sftp.json
                 path: sftp.json
+      {{- end }}
       {{- with .Values.storage.volumes }}
       {{- toYaml . | nindent 8 }}
+      {{- end }}
       {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
