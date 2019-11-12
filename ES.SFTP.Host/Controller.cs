@@ -118,6 +118,16 @@ namespace ES.SFTP.Host
             if (!Directory.Exists(SshHostKeysDirPath))
                 Directory.CreateDirectory(SshHostKeysDirPath);
 
+
+            foreach (var hostKeyFile in HostKeyFiles)
+            {
+                var filePath = Path.Combine(SshHostKeysDirPath, hostKeyFile.Key);
+                if (File.Exists(filePath)) continue;
+                _logger.LogDebug("Generating host key file '{file}'", filePath);
+                var keygenArgs = string.Format(hostKeyFile.Value, filePath);
+                await ProcessUtil.QuickRun("ssh-keygen", keygenArgs);
+            }
+
             foreach (var file in Directory.GetFiles(SshHostKeysDirPath))
             {
                 var targetFile = Path.Combine(SshDirectoryPath, Path.GetFileName(file));
@@ -127,14 +137,6 @@ namespace ES.SFTP.Host
                 await ProcessUtil.QuickRun("chmod", $"700 \"{targetFile}\"");
             }
 
-            foreach (var hostKeyFile in HostKeyFiles)
-            {
-                var filePath = Path.Combine(SshDirectoryPath, hostKeyFile.Key);
-                if (File.Exists(filePath)) continue;
-                _logger.LogDebug("Generating host key file '{file}'", filePath);
-                var keygenArgs = string.Format(hostKeyFile.Value, filePath);
-                await ProcessUtil.QuickRun("ssh-keygen", keygenArgs);
-            }
         }
 
         private async Task ConfigureOpenSSH(SftpConfiguration configuration)
