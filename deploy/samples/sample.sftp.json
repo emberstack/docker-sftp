@@ -1,22 +1,15 @@
 {
-    "global": {
-        "useDNS": false,
-        "logging": {
-            "enabled": true,
-            "level": "VERBOSE"
+    "Global": {
+        "Chroot": {
+            "Directory": "%h",
+            "StartPath": "sftp"
         },
-        "chroot": {
-            "directory": "%h",
-            "startPath": "sftp"
-        },
-        "directories":[
-            "sftp"
-        ]
+        "Directories": ["sftp"]
     },
-    "users": [
+    "Users": [
         {
-            "username": "demo",
-            "password": "demo"
+            "Username": "demo",
+            "Password": "demo"
         }
     ]
 }

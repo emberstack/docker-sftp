@@ -1,0 +1,22 @@
+{
+    "Serilog": {
+        "Using": ["Serilog.Sinks.Console"],
+        "MinimumLevel": {
+            "Default": "Verbose",
+            "Override": {
+                "System": "Warning",
+                "Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager": "Error",
+                "Microsoft": "Information"
+            }
+        },
+        "WriteTo": [
+            {
+                "Name": "Console",
+                "Args": {
+                    "outputTemplate":
+                        "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] ({SourceContext}) {Message:lj}{NewLine}{Exception}"
+                }
+            }
+        ]
+    }
+}
