@@ -33,6 +33,7 @@ You can customize the values of the helm deployment by using the following Value
 | `image.pullPolicy`                                          | Container image pull policy                                                      | `Always` if `image.tag` is `latest`, else `IfNotPresent`|
 | `storage.volumes`                                           | Defines additional volumes for the pod                                           | `{}`                                                    |
 | `storage.volumeMounts`                                      | Defines additional volumes mounts for the sftp container                         | `{}`                                                    |
+| `configuration`                                             | Allows the in-line override of the configuration values                          | `null`                                                  |
 | `configuration.Global.Chroot.Directory`                     | Global chroot directory for the `sftp` user group. Can be overriden per-user     | `"%h"`                                                  |
 | `configuration.Global.Chroot.StartPath`                     | Start path for the `sftp` user group. Can be overriden per-user                  | `"sftp"`                                                |
 | `configuration.Global.Directories`                          | Directories that get created for all `sftp` users. Can be appended per user      | `["sftp"]`                                              |

@@ -14,22 +14,14 @@ nameOverride: ""
 fullnameOverride: ""
 
 
-configuration:
-  Global:
-    Chroot:
-      Directory: "%h"
-      StartPath: "sftp"
-    Directories: ["sftp"]
-  Users:
-    - Username: demo
-      Password: demo
+configuration: null
 
 storage:
-  volumeMounts: {}
-  volumes: {}
+  volumeMounts: []
+  volumes: []
 
 
-initContainers: {}
+initContainers: []
 
 service:
   type: ClusterIP

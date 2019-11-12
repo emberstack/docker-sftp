@@ -29,7 +29,7 @@ Process:
 
 ### Configuration
 
-The SFTP server uses a `json` based configuration file for default server options and to define users. This file has to be mounted on `/app/sftp.json` inside the container.
+The SFTP server uses a `json` based configuration file for default server options and to define users. This file has to be mounted on `/app/config/sftp.json` inside the container.
 Environment variable based configuration is not supported (see the `Advanced Configuration` section below for the reasons).
 
 Below is the simplest configuration file for the SFTP server:
@@ -70,14 +70,14 @@ This will start a SFTP in the container `sftp` with the default configuration. Y
 > Provide your configuration
 
 ```shellsession
-$ docker run -p 22:22 -d emberstack/sftp --name sftp -v /host/sftp.json:/app/sftp.json:ro
+$ docker run -p 22:22 -d emberstack/sftp --name sftp -v /host/sftp.json:/app/config/sftp.json:ro
 ```
-This will override the default (`/app/sftp.json`) configuration with the one from the host `/host/sftp.json`.
+This will override the default (`/app/config/sftp.json`) configuration with the one from the host `/host/sftp.json`.
 
 > Mount a directory from the host for the user 'demo'
 
 ```shellsession
-$ docker run -p 22:22 -d emberstack/sftp --name sftp -v /host/sftp.json:/app/sftp.json:ro -v /host/demo:/home/demo/sftp
+$ docker run -p 22:22 -d emberstack/sftp --name sftp -v /host/sftp.json:/app/config/sftp.json:ro -v /host/demo:/home/demo/sftp
 ```
 This will mount the `demo` directory from the host on the `sftp` directory for the "demo" user.
 
@@ -95,7 +95,7 @@ services:
     ports:
       - "22:22"
     volumes:
-      - ../config-samples/sample.sftp.json:/app/sftp.json:ro
+      - ../config-samples/sample.sftp.json:/app/config/sftp.json:ro
 ```
 And run it using docker-compose
 ```shellsession
@@ -126,6 +126,7 @@ You can customize the values of the helm deployment by using the following Value
 | `image.pullPolicy`                                          | Container image pull policy                                                      | `Always` if `image.tag` is `latest`, else `IfNotPresent`|
 | `storage.volumes`                                           | Defines additional volumes for the pod                                           | `{}`                                                    |
 | `storage.volumeMounts`                                      | Defines additional volumes mounts for the sftp container                         | `{}`                                                    |
+| `configuration`                                             | Allows the in-line override of the configuration values                          | `null`                                                  |
 | `configuration.Global.Chroot.Directory`                     | Global chroot directory for the `sftp` user group. Can be overriden per-user     | `"%h"`                                                  |
 | `configuration.Global.Chroot.StartPath`                     | Start path for the `sftp` user group. Can be overriden per-user                  | `"sftp"`                                                |
 | `configuration.Global.Directories`                          | Directories that get created for all `sftp` users. Can be appended per user      | `["sftp"]`                                              |

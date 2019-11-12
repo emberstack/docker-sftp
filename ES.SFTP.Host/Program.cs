@@ -48,7 +48,7 @@ namespace ES.SFTP.Host
                 .ConfigureAppConfiguration((hostingContext, config) =>
                 {
                     config.AddJsonFile("app.logging.json", false, false);
-                    config.AddJsonFile("sftp.json", false, true);
+                    config.AddJsonFile("config/sftp.json", false, true);
                     config.AddEnvironmentVariables(EnvironmentVariablePrefix);
                     config.AddCommandLine(args);
                 })

@@ -36,7 +36,8 @@ spec:
           volumeMounts:
           {{- if .Values.configuration }}
             - name: sftp-json
-              mountPath: "/app"
+              mountPath: "/app/config"
+              subPath: sftp.json
               readOnly: true
           {{- end }}
           {{- with .Values.storage.volumeMounts }}
