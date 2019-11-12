@@ -34,7 +34,7 @@ spec:
               protocol: TCP
           volumeMounts:
             - name: sftp-json
-              mountPath: "/sftp/config"
+              mountPath: "/app"
               readOnly: true
           {{- with .Values.storage.volumeMounts }}
           {{- toYaml . | nindent 12 }}

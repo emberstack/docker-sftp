@@ -5,4 +5,4 @@ services:
     ports:
       - "22:22"
     volumes:
-      - ../samples/sample.sftp.json:/sftp/config/sftp.json:ro
+      - ../samples/sample.sftp.json:/app/sftp.json:ro

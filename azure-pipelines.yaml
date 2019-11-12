@@ -52,18 +52,20 @@ stages:
 
           - publish: '$(Build.ArtifactStagingDirectory)/artifacts/helm'
             artifact: 'helm'
+            displayName: 'Publish helm artifact'
 
           - publish: '$(Build.ArtifactStagingDirectory)/artifacts/kubectl'
             artifact: 'kubectl'
+            displayName: 'Publish kubectl artifact'
 
           - task: Docker@2
             displayName: "Build amd64 image"
             inputs:
               containerRegistry: "Emberstack Docker Hub"
               repository: $(imageRepository)
-              Dockerfile: src/Dockerfile
+              Dockerfile: ES.SFTP.Host/Dockerfile
               command: build
-              buildContext: src
+              buildContext: .
               tags: "build-$(Build.BuildNumber)-amd64"
 
           - task: Docker@2

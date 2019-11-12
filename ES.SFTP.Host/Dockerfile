@@ -1,0 +1,36 @@
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.0-buster-slim AS base
+RUN apt-get update && \
+    # - Install required packages
+    #
+    apt-get -y install members && \
+    apt-get -y install acl && \
+    #
+    # - Install openssh-server
+    apt-get -y install openssh-server && \
+    #
+    # - Cleanup
+    rm -rf /var/lib/apt/lists/* && \
+    #
+    # - Create OpenSSH directory
+    mkdir -p /var/run/sshd && \
+    #
+    # - Remove default host keys
+    rm -f /etc/ssh/ssh_host_*key*
+WORKDIR /app
+EXPOSE 22 80
+
+FROM mcr.microsoft.com/dotnet/core/sdk:3.0-buster AS build
+WORKDIR /src
+COPY ["ES.SFTP.Host/ES.SFTP.Host.csproj", "ES.SFTP.Host/"]
+RUN dotnet restore "ES.SFTP.Host/ES.SFTP.Host.csproj"
+COPY . .
+WORKDIR "/src/ES.SFTP.Host"
+RUN dotnet build "ES.SFTP.Host.csproj" -c Release -o /app/build
+
+FROM build AS publish
+RUN dotnet publish "ES.SFTP.Host.csproj" -c Release -o /app/publish
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "ES.SFTP.Host.dll"]

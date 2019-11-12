@@ -1,5 +1,5 @@
 # SFTP ([SSH File Transfer Protocol](https://en.wikipedia.org/wiki/SSH_File_Transfer_Protocol)) server using [OpenSSH](https://en.wikipedia.org/wiki/OpenSSH)
-This project provides a Docker image for hosting a SFTP server. Included are `Docker` (`docker-cli` and `docker-compose`) and `Kubernetes` (`kubectl` and `helm`) deployment scripts
+This project provides a Docker image for hosting a SFTP server.
 
 [![Build Status](https://dev.azure.com/emberstack/OpenSource/_apis/build/status/docker-sftp?branchName=master)](https://dev.azure.com/emberstack/OpenSource/_build/latest?definitionId=16&branchName=master)
 [![Release](https://img.shields.io/github/release/emberstack/docker-sftp.svg?style=flat-square)](https://github.com/emberstack/docker-sftp/releases/latest)
@@ -13,16 +13,7 @@ This project provides a Docker image for hosting a SFTP server. Included are `Do
 
 > Supports architectures: `amd64`. Coming soon: `arm` and `arm64`
 
-## Usage
-
-The SFTP server can be easily deployed to any platform that can host containers based on Docker.
-
-Process:
-1) Create server configuration
-2) Mount volumes as needed
-3) Set host file for consistent server fingerprint
-
-## Deployment to Kubernetes using Helm
+### Deployment to Kubernetes using Helm
 
 Use Helm to install the latest released chart:
 ```shellsession
@@ -42,16 +33,17 @@ You can customize the values of the helm deployment by using the following Value
 | `image.pullPolicy`                                          | Container image pull policy                                                      | `Always` if `image.tag` is `latest`, else `IfNotPresent`|
 | `storage.volumes`                                           | Defines additional volumes for the pod                                           | `{}`                                                    |
 | `storage.volumeMounts`                                      | Defines additional volumes mounts for the sftp container                         | `{}`                                                    |
-| `configuration.global.chroot.directory`                     | Global chroot directory for the `sftp` user group. Can be overriden per-user     | `"%h"`                                                  |
-| `configuration.global.chroot.startPath`                     | Start path for the `sftp` user group. Can be overriden per-user                  | `"sftp"`                                                |
-| `configuration.global.directories`                          | Directories that get created for all `sftp` users. Can be appended per user      | `["sftp"]`                                              |
-| `configuration.users`                                       | Array of users and their properties                                              | Contains `demo` user by default                         |
-| `configuration.users[].username`                            | Set the user's username                                                          | N/A                                                     |
-| `configuration.users[].password`                            | Set the user's password. If empty or `null`, password authentication is disabled | N/A                                                     |
-| `configuration.users[].passwordEncrypted`                   | `true` or `false`. Indicates if the password value is already encrypted          | `false`                                                 |
-| `configuration.users[].passwordEncrypted`                   | `true` or `false`. Indicates if the password value is already encrypted          | `false`                                                 |
-| `configuration.users[].chroot`                              | If set, will override global `chroot` settings for this user.                    | `null`                                                  |
-| `configuration.users[].directories`                         | Array of additional directories created for this user                            | `null`                                                  |
+| `configuration.Global.Chroot.Directory`                     | Global chroot directory for the `sftp` user group. Can be overriden per-user     | `"%h"`                                                  |
+| `configuration.Global.Chroot.StartPath`                     | Start path for the `sftp` user group. Can be overriden per-user                  | `"sftp"`                                                |
+| `configuration.Global.Directories`                          | Directories that get created for all `sftp` users. Can be appended per user      | `["sftp"]`                                              |
+| `configuration.Users`                                       | Array of users and their properties                                              | Contains `demo` user by default                         |
+| `configuration.Users[].Username`                            | Set the user's username                                                          | N/A                                                     |
+| `configuration.Users[].Password`                            | Set the user's password. If empty or `null`, password authentication is disabled | N/A                                                     |
+| `configuration.Users[].PasswordIsEncrypted`                 | `true` or `false`. Indicates if the password value is already encrypted          | `false`                                                 |
+| `configuration.Users[].UID`                                 | Sets the user's UID.                                                             | `null`                                                  |
+| `configuration.Users[].GID`                                 | Sets the user's GID. A group is created for this value and the user is included  | `null`                                                  |
+| `configuration.Users[].Chroot`                              | If set, will override global `Chroot` settings for this user.                    | `null`                                                  |
+| `configuration.Users[].Directories`                         | Array of additional directories created for this user                            | `null`                                                  |
 | `initContainers`                                            | Additional initContainers for the pod                                            | `{}`                                                    |
 | `resources`                                                 | Resource limits                                                                  | `{}`                                                    |
 | `nodeSelector`                                              | Node labels for pod assignment                                                   | `{}`                                                    |
