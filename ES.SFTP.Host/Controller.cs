@@ -152,7 +152,7 @@ namespace ES.SFTP.Host
             builder.AppendLine("UseDNS no");
             builder.AppendLine();
             builder.AppendLine("# Logging");
-            builder.AppendLine("LogLevel VERBOSE");
+            builder.AppendLine("LogLevel INFO");
             builder.AppendLine();
             builder.AppendLine("# Subsystem");
             builder.AppendLine("Subsystem sftp internal-sftp");
@@ -215,6 +215,15 @@ namespace ES.SFTP.Host
                 _logger.LogInformation("Creating group '{group}'", SftpGroup);
                 await GroupUtil.GroupCreate(SftpGroup, true);
             }
+
+            var existingUsers = (await GroupUtil.GroupListUsers(SftpGroup));
+            var toRemove = existingUsers.Where(s => !configuration.Users.Select(t => t.Username).Contains(s)).ToList();
+            foreach (var user in toRemove)
+            {
+                _logger.LogDebug("Removing user '{user}'", user, SftpGroup);
+                await UserUtil.UserDelete(user);
+            }
+
 
             foreach (var user in configuration.Users)
             {
