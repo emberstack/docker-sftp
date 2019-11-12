@@ -70,8 +70,6 @@ namespace ES.SFTP.Host
             var config = _sftpOptionsMonitor.CurrentValue ?? new SftpConfiguration();
 
             config.Global ??= new GlobalConfiguration();
-            if (string.IsNullOrWhiteSpace(config.Global.HomeDirectory)) config.Global.HomeDirectory = "/home";
-
 
             config.Global.Directories ??= new List<string>();
             config.Global.Chroot ??= new ChrootDefinition();
