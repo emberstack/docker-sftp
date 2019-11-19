@@ -27,11 +27,10 @@ stages:
             workingDirectory: '$(Build.ArtifactStagingDirectory)'
             displayName: 'Create Artifacts directories'
 
-          - task: HelmInstaller@0
+          - task: HelmInstaller@1
             displayName: 'Install Helm'
             inputs:
-              helmVersion: 2.13.1
-              kubectlVersion: 1.10.11
+                helmVersionToInstall: 2.14.1
 
           - script: 'helm lint'
             workingDirectory: deploy/helm/sftp
