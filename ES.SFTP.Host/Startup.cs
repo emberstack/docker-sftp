@@ -1,5 +1,3 @@
-using System.IO;
-using System.Net.NetworkInformation;
 using System.Reflection;
 using Autofac;
 using ES.SFTP.Host.Business.Configuration;

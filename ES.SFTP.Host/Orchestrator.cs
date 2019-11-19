@@ -32,8 +32,8 @@ namespace ES.SFTP.Host
 
         private readonly ILogger<Orchestrator> _logger;
         private readonly IOptionsMonitor<SftpConfiguration> _sftpOptionsMonitor;
-        private Process _serverProcess;
         private SftpConfiguration _config;
+        private Process _serverProcess;
 
         public Orchestrator(ILogger<Orchestrator> logger, IOptionsMonitor<SftpConfiguration> sftpOptionsMonitor)
         {
@@ -129,6 +129,7 @@ namespace ES.SFTP.Host
             config.Global ??= new GlobalConfiguration();
 
             config.Global.Directories ??= new List<string>();
+            config.Global.Logging ??= new LoggingDefinition();
             config.Global.Chroot ??= new ChrootDefinition();
             if (string.IsNullOrWhiteSpace(config.Global.Chroot.Directory)) config.Global.Chroot.Directory = "%h";
             if (string.IsNullOrWhiteSpace(config.Global.Chroot.StartPath)) config.Global.Chroot.StartPath = null;
@@ -218,7 +219,7 @@ namespace ES.SFTP.Host
             builder.AppendLine();
             builder.AppendLine();
             builder.AppendLine("# Match all users");
-            builder.Append($"Match User \"*");
+            builder.Append("Match User \"*");
             if (_config.Users.Any(s => s.Chroot != null))
             {
                 var exceptionUsers = _config.Users
@@ -229,6 +230,7 @@ namespace ES.SFTP.Host
                 builder.Append(",");
                 builder.Append(exceptionList);
             }
+
             builder.Append("\"");
 
 
@@ -297,7 +299,6 @@ namespace ES.SFTP.Host
                     await GroupUtil.GroupAddUser(SftpUserInventoryGroup, user.Username);
                 }
 
-                
 
                 _logger.LogDebug("Updating the password for user '{user}'", user.Username);
                 await UserUtil.UserSetPassword(user.Username, user.Password, user.PasswordIsEncrypted);
@@ -332,7 +333,7 @@ namespace ES.SFTP.Host
             {
                 Username = username,
                 Chroot = _config.Global.Chroot,
-                Directories = _config.Global.Directories,
+                Directories = _config.Global.Directories
             };
 
             var homeDirPath = Path.Combine(HomeBasePath, username);
@@ -414,6 +415,9 @@ namespace ES.SFTP.Host
 
         private void OnSSHOutput(object sender, DataReceivedEventArgs e)
         {
+            if (string.IsNullOrWhiteSpace(e.Data)) return;
+            if (_config.Global.Logging.IgnoreNoIdentificationString &&
+                e.Data.Trim().StartsWith("Did not receive identification string from")) return;
             _logger.LogTrace($"sshd - {e.Data}");
         }
     }
