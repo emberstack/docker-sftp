@@ -7,11 +7,11 @@ namespace ES.SFTP.Host
 {
     public class HostedService : IHostedService
     {
-        private readonly Controller _controller;
+        private readonly Orchestrator _controller;
         private readonly ILogger<HostedService> _logger;
 
 
-        public HostedService(ILogger<HostedService> logger, Controller controller)
+        public HostedService(ILogger<HostedService> logger, Orchestrator controller)
         {
             _logger = logger;
             _controller = controller;

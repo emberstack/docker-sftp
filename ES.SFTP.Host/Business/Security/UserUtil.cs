@@ -17,9 +17,9 @@ namespace ES.SFTP.Host.Business.Security
                 $"--comment {username} {(noLoginShell ? "-s /usr/sbin/nologin" : string.Empty)} {username}");
         }
 
-        public static async Task UserDelete(string username)
+        public static async Task UserDelete(string username, bool throwOnError = true)
         {
-            await ProcessUtil.QuickRun("userdel", username);
+            await ProcessUtil.QuickRun("userdel", username, throwOnError);
         }
 
         public static async Task UserSetId(string username, int id, bool nonUnique = true)

@@ -2,11 +2,13 @@ FROM mcr.microsoft.com/dotnet/core/aspnet:3.0-buster-slim AS base
 RUN apt-get update && \
     # - Install required packages
     #
-    apt-get -y install members && \
-    apt-get -y install acl && \
+    apt-get -y install members acl iputils-ping nano && \
     #
     # - Install openssh-server
     apt-get -y install openssh-server && \
+    #
+	# - Install sssd
+	apt-get -y install sssd libpam-sss libnss-sss && \
     #
     # - Cleanup
     rm -rf /var/lib/apt/lists/* && \

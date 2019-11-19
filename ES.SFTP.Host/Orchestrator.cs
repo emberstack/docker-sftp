@@ -4,27 +4,38 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using ES.SFTP.Host.Business.Configuration;
 using ES.SFTP.Host.Business.Interop;
 using ES.SFTP.Host.Business.Security;
+using ES.SFTP.Host.Messages;
+using MediatR;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace ES.SFTP.Host
 {
-    public class Controller
+    public class Orchestrator : IRequestHandler<PamEventRequest, bool>
     {
         private const string HomeBasePath = "/home";
-        private const string SftpGroup = "sftp";
+        private const string SftpUserInventoryGroup = "sftp-user-inventory";
         private const string SshDirectoryPath = "/etc/ssh";
         private const string SshHostKeysDirPath = "/etc/ssh/keys";
         private const string SshConfigPath = "/etc/ssh/sshd_config";
-        private readonly ILogger<Controller> _logger;
+
+        private readonly Dictionary<string, string> _hostKeyFiles = new Dictionary<string, string>
+        {
+            {"ssh_host_ed25519_key", "-t ed25519 -f {0} -N \"\""},
+            {"ssh_host_rsa_key", "-t rsa -b 4096 -f {0} -N \"\""}
+        };
+
+        private readonly ILogger<Orchestrator> _logger;
         private readonly IOptionsMonitor<SftpConfiguration> _sftpOptionsMonitor;
         private Process _serverProcess;
+        private SftpConfiguration _config;
 
-        public Controller(ILogger<Controller> logger, IOptionsMonitor<SftpConfiguration> sftpOptionsMonitor)
+        public Orchestrator(ILogger<Orchestrator> logger, IOptionsMonitor<SftpConfiguration> sftpOptionsMonitor)
         {
             _logger = logger;
             _sftpOptionsMonitor = sftpOptionsMonitor;
@@ -35,20 +46,24 @@ namespace ES.SFTP.Host
             });
         }
 
-        private Dictionary<string, string> HostKeyFiles { get; } = new Dictionary<string, string>
+        public async Task<bool> Handle(PamEventRequest request, CancellationToken cancellationToken)
         {
-            {"ssh_host_ed25519_key", "-t ed25519 -f {0} -N \"\""},
-            {"ssh_host_rsa_key", "-t rsa -b 4096 -f {0} -N \"\""}
-        };
+            if (!string.Equals(request.EventType, "open_session", StringComparison.OrdinalIgnoreCase)) return true;
+            _logger.LogInformation("Preparing session for user '{user}'", request.Username);
+            await PrepareUserForSftp(request.Username);
+            return true;
+        }
+
 
         public async Task Start()
         {
             _logger.LogDebug("Starting");
-            var config = await PrepareAndValidateConfiguration();
+            await ConfigureAuthentication();
+            await PrepareAndValidateConfiguration();
             await ImportOrCreateHostKeyFiles();
-            await ConfigureOpenSSH(config);
+            await ConfigureOpenSSH();
             await SetupHomeBaseDirectory();
-            await SyncUsersAndGroups(config);
+            await SyncUsersAndGroups();
             await StartOpenSSH();
             _logger.LogInformation("Started");
         }
@@ -63,7 +78,49 @@ namespace ES.SFTP.Host
             return Task.CompletedTask;
         }
 
-        private Task<SftpConfiguration> PrepareAndValidateConfiguration()
+        private async Task ConfigureAuthentication()
+        {
+            const string pamDirPath = "/etc/pam.d";
+            const string pamHookName = "sftp-hook";
+            var pamCommonSessionFile = Path.Combine(pamDirPath, "common-session");
+            var pamSftpHookFile = Path.Combine(pamDirPath, pamHookName);
+
+
+            await ProcessUtil.QuickRun("service", "sssd stop", false);
+
+            File.Copy("./config/sssd.conf", "/etc/sssd/sssd.conf", true);
+            await ProcessUtil.QuickRun("chown", "root:root \"/etc/sssd/sssd.conf\"");
+            await ProcessUtil.QuickRun("chmod", "600 \"/etc/sssd/sssd.conf\"");
+
+
+            var scriptsDirectory = Path.Combine(pamDirPath, "scripts");
+            if (!Directory.Exists(scriptsDirectory)) Directory.CreateDirectory(scriptsDirectory);
+            var hookScriptFile = Path.Combine(new DirectoryInfo(scriptsDirectory).FullName, "sftp-pam-event.sh");
+            var eventsScriptBuilder = new StringBuilder();
+            eventsScriptBuilder.AppendLine("#!/bin/sh");
+            eventsScriptBuilder.AppendLine(
+                "curl \"http://localhost/api/events/pam/generic?username=$PAM_USER&type=$PAM_TYPE&service=$PAM_SERVICE\"");
+            await File.WriteAllTextAsync(hookScriptFile, eventsScriptBuilder.ToString());
+            await ProcessUtil.QuickRun("chown", $"root:root \"{hookScriptFile}\"");
+            await ProcessUtil.QuickRun("chmod", $"+x \"{hookScriptFile}\"");
+
+
+            var hookBuilder = new StringBuilder();
+            hookBuilder.AppendLine("# This file is used to signal the SFTP service on user events.");
+            hookBuilder.AppendLine($"session required pam_exec.so {new FileInfo(hookScriptFile).FullName}");
+            await File.WriteAllTextAsync(pamSftpHookFile, hookBuilder.ToString());
+            await ProcessUtil.QuickRun("chown", $"root:root \"{pamSftpHookFile}\"");
+            await ProcessUtil.QuickRun("chmod", $"644 \"{pamSftpHookFile}\"");
+
+
+            if (!(await File.ReadAllTextAsync(pamCommonSessionFile)).Contains($"@include {pamHookName}"))
+                await File.AppendAllTextAsync(pamCommonSessionFile, $"@include {pamHookName}{Environment.NewLine}");
+
+
+            await ProcessUtil.QuickRun("service", "sssd restart", false);
+        }
+
+        private Task PrepareAndValidateConfiguration()
         {
             _logger.LogDebug("Preparing and validating configuration");
 
@@ -106,7 +163,8 @@ namespace ES.SFTP.Host
             config.Users = validUsers;
             _logger.LogInformation("Configuration contains '{userCount}' user(s)", config.Users.Count);
 
-            return Task.FromResult(config);
+            _config = config;
+            return Task.CompletedTask;
         }
 
         private async Task ImportOrCreateHostKeyFiles()
@@ -117,7 +175,7 @@ namespace ES.SFTP.Host
                 Directory.CreateDirectory(SshHostKeysDirPath);
 
 
-            foreach (var hostKeyFile in HostKeyFiles)
+            foreach (var hostKeyFile in _hostKeyFiles)
             {
                 var filePath = Path.Combine(SshHostKeysDirPath, hostKeyFile.Key);
                 if (File.Exists(filePath)) continue;
@@ -130,17 +188,18 @@ namespace ES.SFTP.Host
             {
                 var targetFile = Path.Combine(SshDirectoryPath, Path.GetFileName(file));
                 _logger.LogDebug("Copying '{sourceFile}' to '{targetFile}'", file, targetFile);
-                File.Copy(file, targetFile);
+                File.Copy(file, targetFile, true);
                 await ProcessUtil.QuickRun("chown", $"root:root \"{targetFile}\"");
                 await ProcessUtil.QuickRun("chmod", $"700 \"{targetFile}\"");
             }
-
         }
 
-        private async Task ConfigureOpenSSH(SftpConfiguration configuration)
+        private async Task ConfigureOpenSSH()
         {
             var builder = new StringBuilder();
             builder.AppendLine();
+            builder.AppendLine("UsePAM yes");
+
             builder.AppendLine("# SSH Protocol");
             builder.AppendLine("Protocol 2");
             builder.AppendLine();
@@ -158,31 +217,32 @@ namespace ES.SFTP.Host
             builder.AppendLine("Subsystem sftp internal-sftp");
             builder.AppendLine();
             builder.AppendLine();
-            builder.AppendLine("# Match SFTP group");
-            builder.Append($"Match Group {SftpGroup}");
-            if (configuration.Users.Any(s => s.Chroot != null))
+            builder.AppendLine("# Match all users");
+            builder.Append($"Match User \"*");
+            if (_config.Users.Any(s => s.Chroot != null))
             {
-                var exceptionUsers = configuration.Users
+                var exceptionUsers = _config.Users
                     .Where(s => s.Chroot != null)
                     .Select(s => s.Username).Distinct()
                     .Select(s => $"!{s.Trim()}").ToList();
                 var exceptionList = string.Join(",", exceptionUsers);
-                builder.Append(" User \"*,");
+                builder.Append(",");
                 builder.Append(exceptionList);
-                builder.Append("\"");
             }
+            builder.Append("\"");
+
 
             builder.AppendLine();
-            builder.AppendLine($"ChrootDirectory {configuration.Global.Chroot.Directory}");
+            builder.AppendLine($"ChrootDirectory {_config.Global.Chroot.Directory}");
             builder.AppendLine("X11Forwarding no");
             builder.AppendLine("AllowTcpForwarding no");
             builder.AppendLine(
-                !string.IsNullOrWhiteSpace(configuration.Global.Chroot.StartPath)
-                    ? $"ForceCommand internal-sftp -d {configuration.Global.Chroot.StartPath}"
+                !string.IsNullOrWhiteSpace(_config.Global.Chroot.StartPath)
+                    ? $"ForceCommand internal-sftp -d {_config.Global.Chroot.StartPath}"
                     : "ForceCommand internal-sftp");
             builder.AppendLine();
             builder.AppendLine();
-            foreach (var user in configuration.Users.Where(s => s.Chroot != null).ToList())
+            foreach (var user in _config.Users.Where(s => s.Chroot != null).ToList())
             {
                 builder.AppendLine($"# Match User {user.Username}");
                 builder.AppendLine($"Match User {user.Username}");
@@ -206,26 +266,26 @@ namespace ES.SFTP.Host
             await ProcessUtil.QuickRun("chown", $"root:root \"{HomeBasePath}\"");
         }
 
-        private async Task SyncUsersAndGroups(SftpConfiguration configuration)
+        private async Task SyncUsersAndGroups()
         {
             _logger.LogInformation("Synchronizing users and groups");
 
-            if (!await GroupUtil.GroupExists(SftpGroup))
+            if (!await GroupUtil.GroupExists(SftpUserInventoryGroup))
             {
-                _logger.LogInformation("Creating group '{group}'", SftpGroup);
-                await GroupUtil.GroupCreate(SftpGroup, true);
+                _logger.LogInformation("Creating group '{group}'", SftpUserInventoryGroup);
+                await GroupUtil.GroupCreate(SftpUserInventoryGroup, true);
             }
 
-            var existingUsers = (await GroupUtil.GroupListUsers(SftpGroup));
-            var toRemove = existingUsers.Where(s => !configuration.Users.Select(t => t.Username).Contains(s)).ToList();
+            var existingUsers = await GroupUtil.GroupListUsers(SftpUserInventoryGroup);
+            var toRemove = existingUsers.Where(s => !_config.Users.Select(t => t.Username).Contains(s)).ToList();
             foreach (var user in toRemove)
             {
-                _logger.LogDebug("Removing user '{user}'", user, SftpGroup);
-                await UserUtil.UserDelete(user);
+                _logger.LogDebug("Removing user '{user}'", user, SftpUserInventoryGroup);
+                await UserUtil.UserDelete(user, false);
             }
 
 
-            foreach (var user in configuration.Users)
+            foreach (var user in _config.Users)
             {
                 _logger.LogInformation("Processing user '{user}'", user.Username);
 
@@ -233,13 +293,11 @@ namespace ES.SFTP.Host
                 {
                     _logger.LogDebug("Creating user '{user}'", user.Username);
                     await UserUtil.UserCreate(user.Username, true);
+                    _logger.LogDebug("Adding user '{user}' to '{group}'", user.Username, SftpUserInventoryGroup);
+                    await GroupUtil.GroupAddUser(SftpUserInventoryGroup, user.Username);
                 }
 
-                if ((await GroupUtil.GroupListUsers(SftpGroup)).All(s => s != user.Username))
-                {
-                    _logger.LogDebug("Adding user '{user}' to '{group}'", user.Username, SftpGroup);
-                    await GroupUtil.GroupAddUser(SftpGroup, user.Username);
-                }
+                
 
                 _logger.LogDebug("Updating the password for user '{user}'", user.Username);
                 await UserUtil.UserSetPassword(user.Username, user.Password, user.PasswordIsEncrypted);
@@ -264,53 +322,65 @@ namespace ES.SFTP.Host
                     await GroupUtil.GroupAddUser(virtualGroup, user.Username);
                 }
 
-                var homeDirPath = Path.Combine(HomeBasePath, user.Username);
-                if (!Directory.Exists(homeDirPath))
-                {
-                    _logger.LogDebug("Creating the home directory for user '{user}'", user.Username);
-                    Directory.CreateDirectory(homeDirPath);
-                }
-
-                homeDirPath = new DirectoryInfo(homeDirPath).FullName;
-                await ProcessUtil.QuickRun("chown", $"root:root {homeDirPath}");
-                await ProcessUtil.QuickRun("chmod", $"700 {homeDirPath}");
-
-                var chroot = user.Chroot ?? configuration.Global.Chroot;
-                var chrootPath = string.Join("%%h",
-                    chroot.Directory.Split("%%h").Select(s => s.Replace("%h", homeDirPath)).ToList());
-                chrootPath = string.Join("%%u",
-                    chrootPath.Split("%%u").Select(s => s.Replace("%u", user.Username)).ToList());
-                await ProcessUtil.QuickRun("chown", $"root:root {chrootPath}");
-                await ProcessUtil.QuickRun("chmod", $"755 {chrootPath}");
-
-                var directories = new List<string>();
-                directories.AddRange(configuration.Global.Directories);
-                directories.AddRange(user.Directories);
-                foreach (var directory in directories.Distinct().OrderBy(s => s).ToList())
-                {
-                    var dirPath = Path.Combine(homeDirPath, directory);
-                    if (!Directory.Exists(dirPath))
-                    {
-                        _logger.LogDebug("Creating directory '{dir}' for user '{user}'", dirPath, user.Username);
-                        Directory.CreateDirectory(dirPath);
-                    }
-
-                    await ProcessUtil.QuickRun("chown", $"-R {user.Username}:{SftpGroup} {dirPath}");
-                }
-
-                var sshDir = Path.Combine(homeDirPath, ".ssh");
-                if (!Directory.Exists(sshDir)) Directory.CreateDirectory(sshDir);
-                var sshKeysDir = Path.Combine(sshDir, "keys");
-                if (!Directory.Exists(sshKeysDir)) Directory.CreateDirectory(sshKeysDir);
-                var sshAuthKeysPath = Path.Combine(sshDir, "authorized_keys");
-                if (File.Exists(sshAuthKeysPath)) File.Delete(sshAuthKeysPath);
-                var authKeysBuilder = new StringBuilder();
-                foreach (var file in Directory.GetFiles(sshKeysDir))
-                    authKeysBuilder.AppendLine(await File.ReadAllTextAsync(file));
-                await File.WriteAllTextAsync(sshAuthKeysPath, authKeysBuilder.ToString());
-                await ProcessUtil.QuickRun("chown", $"{user.Username} {sshAuthKeysPath}");
-                await ProcessUtil.QuickRun("chmod", $"600 {sshAuthKeysPath}");
+                await PrepareUserForSftp(user.Username);
             }
+        }
+
+        private async Task PrepareUserForSftp(string username)
+        {
+            var user = _config.Users.FirstOrDefault(s => s.Username == username) ?? new UserDefinition
+            {
+                Username = username,
+                Chroot = _config.Global.Chroot,
+                Directories = _config.Global.Directories,
+            };
+
+            var homeDirPath = Path.Combine(HomeBasePath, username);
+            if (!Directory.Exists(homeDirPath))
+            {
+                _logger.LogDebug("Creating the home directory for user '{user}'", username);
+                Directory.CreateDirectory(homeDirPath);
+            }
+
+            homeDirPath = new DirectoryInfo(homeDirPath).FullName;
+            await ProcessUtil.QuickRun("chown", $"root:root {homeDirPath}");
+            await ProcessUtil.QuickRun("chmod", $"700 {homeDirPath}");
+
+            var chroot = user.Chroot ?? _config.Global.Chroot;
+            var chrootPath = string.Join("%%h",
+                chroot.Directory.Split("%%h").Select(s => s.Replace("%h", homeDirPath)).ToList());
+            chrootPath = string.Join("%%u",
+                chrootPath.Split("%%u").Select(s => s.Replace("%u", username)).ToList());
+            await ProcessUtil.QuickRun("chown", $"root:root {chrootPath}");
+            await ProcessUtil.QuickRun("chmod", $"755 {chrootPath}");
+
+            var directories = new List<string>();
+            directories.AddRange(_config.Global.Directories);
+            directories.AddRange(user.Directories);
+            foreach (var directory in directories.Distinct().OrderBy(s => s).ToList())
+            {
+                var dirPath = Path.Combine(homeDirPath, directory);
+                if (!Directory.Exists(dirPath))
+                {
+                    _logger.LogDebug("Creating directory '{dir}' for user '{user}'", dirPath, username);
+                    Directory.CreateDirectory(dirPath);
+                }
+
+                await ProcessUtil.QuickRun("chown", $"-R {username}:{SftpUserInventoryGroup} {dirPath}");
+            }
+
+            var sshDir = Path.Combine(homeDirPath, ".ssh");
+            if (!Directory.Exists(sshDir)) Directory.CreateDirectory(sshDir);
+            var sshKeysDir = Path.Combine(sshDir, "keys");
+            if (!Directory.Exists(sshKeysDir)) Directory.CreateDirectory(sshKeysDir);
+            var sshAuthKeysPath = Path.Combine(sshDir, "authorized_keys");
+            if (File.Exists(sshAuthKeysPath)) File.Delete(sshAuthKeysPath);
+            var authKeysBuilder = new StringBuilder();
+            foreach (var file in Directory.GetFiles(sshKeysDir))
+                authKeysBuilder.AppendLine(await File.ReadAllTextAsync(file));
+            await File.WriteAllTextAsync(sshAuthKeysPath, authKeysBuilder.ToString());
+            await ProcessUtil.QuickRun("chown", $"{user.Username} {sshAuthKeysPath}");
+            await ProcessUtil.QuickRun("chmod", $"600 {sshAuthKeysPath}");
         }
 
         private async Task StartOpenSSH()

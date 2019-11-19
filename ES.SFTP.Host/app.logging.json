@@ -5,7 +5,10 @@
             "Default": "Verbose",
             "Override": {
                 "System": "Warning",
-                "Microsoft.AspNetCore.DataProtection.KeyManagement.XmlKeyManager": "Error",
+                "Microsoft.AspNetCore.DataProtection": "Error",
+                "Microsoft.AspNetCore.Routing": "Error",
+                "Microsoft.AspNetCore.Mvc": "Error",
+                "Microsoft.AspNetCore.Hosting.Diagnostics": "Error",
                 "Microsoft": "Information"
             }
         },
