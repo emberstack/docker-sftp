@@ -41,6 +41,51 @@ stages:
 
 
 
+      - job: build_docker_arm32 
+        displayName: "Docker arm32" 
+        pool: 
+          name: winromulus 
+          demands: 
+          - Agent.OSArchitecture -equals ARM 
+        steps: 
+ 
+          - script: | 
+             apt-get update 
+             apt-get install \ 
+              apt-transport-https \ 
+              ca-certificates \ 
+              curl \ 
+              gnupg2 \ 
+              software-properties-common 
+             curl -fsSL https://download.docker.com/linux/debian/gpg | apt-key add - 
+             add-apt-repository \ 
+              "deb [arch=amd64] https://download.docker.com/linux/debian \ 
+              $(lsb_release -cs) \ 
+              stable" 
+             apt-get update 
+             apt-get install docker-ce docker-ce-cli containerd.io 
+            displayName: 'Install docker' 
+ 
+          - task: Docker@2 
+            displayName: 'Build arm32 image' 
+            inputs: 
+              containerRegistry: 'Emberstack Docker Hub' 
+              repository: $(imageRepository) 
+              Dockerfile: ES.SFTP.Host/Dockerfile 
+              command: build 
+              buildContext: . 
+              tags: 'build-$(Build.BuildNumber)-arm32' 
+ 
+          - task: Docker@2 
+            displayName: "Push image" 
+            inputs: 
+              containerRegistry: "Emberstack Docker Hub" 
+              repository: $(imageRepository) 
+              command: push 
+              tags: | 
+                build-$(Build.BuildNumber)-arm32 
+
+
       - job: build_docker_amd64
         displayName: "Docker amd64"
         pool:
