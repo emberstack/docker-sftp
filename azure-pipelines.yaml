@@ -143,7 +143,7 @@ stages:
               command: login
 
           - script: |
-              docker manifest create  $(imageRepository):build-$(Build.BuildNumber) $(imageRepository):build-$(Build.BuildNumber)-amd64
+              docker manifest create  $(imageRepository):build-$(Build.BuildNumber) $(imageRepository):build-$(Build.BuildNumber)-amd64  $(imageRepository):build-$(Build.BuildNumber)-arm32
               docker manifest inspect $(imageRepository):build-$(Build.BuildNumber)
               docker manifest push    $(imageRepository):build-$(Build.BuildNumber)
             displayName: "Create and push multi-arch manifest"
@@ -182,8 +182,8 @@ stages:
           - script: |
               docker pull $(imageRepository):build-$(Build.BuildNumber)-amd64
               docker pull $(imageRepository):build-$(Build.BuildNumber)-arm32
-              docker manifest create $(imageRepository):$(Build.BuildNumber) $(imageRepository):build-$(Build.BuildNumber)-amd64
-              docker manifest create $(imageRepository):latest               $(imageRepository):build-$(Build.BuildNumber)-amd64
+              docker manifest create $(imageRepository):$(Build.BuildNumber) $(imageRepository):build-$(Build.BuildNumber)-amd64 $(imageRepository):build-$(Build.BuildNumber)-arm32
+              docker manifest create $(imageRepository):latest               $(imageRepository):build-$(Build.BuildNumber)-amd64 $(imageRepository):build-$(Build.BuildNumber)-arm32
               docker manifest push $(imageRepository):$(Build.BuildNumber)
               docker manifest push $(imageRepository):latest
             displayName: 'docker pull, tag and push'
