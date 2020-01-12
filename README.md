@@ -20,7 +20,6 @@ Below are deployment methods for:
 - Docker CLI
 - Docker-Compose
 - Kubernetes using Helm (recommended for Kubernetes)
-- Kubernetes (manual)
 
 Process:
 1) Create server configuration
@@ -146,13 +145,6 @@ You can customize the values of the helm deployment by using the following Value
 
 > Find us on [Helm Hub](https://hub.helm.sh/charts/emberstack)
 
-
-### Deployment to Kubernetes using kubectl
-Each release (found on the [Releases](https://github.com/EmberStack/docker-sftp/releases) GitHub page) contains the manual deployment file (`sftp.yaml`).
-
-```shellsession
-$ kubectl apply -f https://github.com/EmberStack/docker-sftp/releases/latest/download/sftp.yaml
-```
 
 ## Advanced Configuration
 

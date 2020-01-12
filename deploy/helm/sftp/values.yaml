@@ -6,7 +6,7 @@ replicaCount: 1
 
 image:
   repository: emberstack/sftp
-  tag: latest
+  tag: ""
   pullPolicy: Always
 
 imagePullSecrets: []
