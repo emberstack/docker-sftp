@@ -26,7 +26,11 @@ spec:
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
+          {{- if .Values.image.tag }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          {{- else }}
+          image: "{{ .Values.image.repository }}:{{ .Chart.AppVersion }}"
+          {{- end }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: ssh

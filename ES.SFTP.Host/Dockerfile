@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/core/aspnet:3.0-buster-slim AS base
+FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 AS base
 RUN apt-get update && \
     # - Install required packages
     #
@@ -21,7 +21,7 @@ RUN apt-get update && \
 WORKDIR /app
 EXPOSE 22 80
 
-FROM mcr.microsoft.com/dotnet/core/sdk:3.0-buster AS build
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
 WORKDIR /src
 COPY ["ES.SFTP.Host/ES.SFTP.Host.csproj", "ES.SFTP.Host/"]
 RUN dotnet restore "ES.SFTP.Host/ES.SFTP.Host.csproj"
