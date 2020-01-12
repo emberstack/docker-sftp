@@ -1,7 +1,7 @@
 name: $(version).$(Rev:r)
 
 variables:
-  version: 1.1
+  version: 2.0
   buildConfiguration: "Release"
   imageRepository: "emberstack/sftp"
   DOCKER_CLI_EXPERIMENTAL: 'enabled'
