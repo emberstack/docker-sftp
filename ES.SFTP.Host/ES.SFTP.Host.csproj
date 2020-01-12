@@ -13,7 +13,9 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Include="config\sssd.conf" />
+    <Content Include="config\sssd.conf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>
