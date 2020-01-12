@@ -11,7 +11,7 @@ This project provides a Docker image for hosting a SFTP server. Included are `Do
 [![license](https://img.shields.io/github/license/emberstack/docker-sftp.svg?style=flat-square)](LICENSE)
 
 
-> Supports architectures: `amd64`. Coming soon: `arm` and `arm64`
+> Supports architectures: `amd64` and `arm`. Coming soon: `arm64`
 
 ## Usage
 
