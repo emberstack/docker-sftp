@@ -124,6 +124,7 @@ stages:
           vmImage: "Ubuntu-16.04"
         dependsOn: 
           - build_docker_amd64
+          - build_docker_arm32
         steps:
 
           - task: DockerInstaller@0
