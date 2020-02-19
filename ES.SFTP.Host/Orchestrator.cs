@@ -348,26 +348,43 @@ namespace ES.SFTP.Host
             await ProcessUtil.QuickRun("chmod", $"700 {homeDirPath}");
 
             var chroot = user.Chroot ?? _config.Global.Chroot;
+
+            //Parse chroot path by replacing markers
             var chrootPath = string.Join("%%h",
                 chroot.Directory.Split("%%h").Select(s => s.Replace("%h", homeDirPath)).ToList());
             chrootPath = string.Join("%%u",
                 chrootPath.Split("%%u").Select(s => s.Replace("%u", username)).ToList());
+
+            //Create chroot directory and set owner to root and correct permissions
+            if (!Directory.Exists(chrootPath)) Directory.CreateDirectory(chrootPath);
             await ProcessUtil.QuickRun("chown", $"root:root {chrootPath}");
             await ProcessUtil.QuickRun("chmod", $"755 {chrootPath}");
+
+            var chrootDirectory = new DirectoryInfo(chrootPath);
 
             var directories = new List<string>();
             directories.AddRange(_config.Global.Directories);
             directories.AddRange(user.Directories);
             foreach (var directory in directories.Distinct().OrderBy(s => s).ToList())
             {
-                var dirPath = Path.Combine(homeDirPath, directory);
+                var dirPath = Path.Combine(chrootDirectory.FullName, directory);
                 if (!Directory.Exists(dirPath))
                 {
                     _logger.LogDebug("Creating directory '{dir}' for user '{user}'", dirPath, username);
                     Directory.CreateDirectory(dirPath);
                 }
 
-                await ProcessUtil.QuickRun("chown", $"-R {username}:{SftpUserInventoryGroup} {dirPath}");
+                var directoryInfo = new DirectoryInfo(dirPath);
+
+                var firstParentInChroot = directoryInfo.Parent ?? chrootDirectory;
+                while ((firstParentInChroot.Parent ??
+                        throw new InvalidOperationException("Cannot find first parent in chroot")).FullName !=
+                       chrootDirectory.FullName)
+                {
+                    firstParentInChroot = firstParentInChroot.Parent;
+                }
+
+                await ProcessUtil.QuickRun("chown", $"-R {username}:{SftpUserInventoryGroup} {firstParentInChroot.FullName}");
             }
 
             var sshDir = Path.Combine(homeDirPath, ".ssh");
