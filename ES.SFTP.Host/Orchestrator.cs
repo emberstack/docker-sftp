@@ -376,15 +376,26 @@ namespace ES.SFTP.Host
 
                 var directoryInfo = new DirectoryInfo(dirPath);
 
-                var firstParentInChroot = directoryInfo.Parent ?? chrootDirectory;
-                while ((firstParentInChroot.Parent ??
-                        throw new InvalidOperationException("Cannot find first parent in chroot")).FullName !=
-                       chrootDirectory.FullName)
+                try
                 {
-                    firstParentInChroot = firstParentInChroot.Parent;
+                    var firstParentInChroot = directoryInfo;
+                    while ((firstParentInChroot.Parent ??
+                            throw new InvalidOperationException("Cannot find first parent in chroot")).FullName !=
+                           chrootDirectory.FullName)
+                    {
+                        firstParentInChroot = firstParentInChroot.Parent;
+                    }
+                    await ProcessUtil.QuickRun("chown", $"-R {username}:{SftpUserInventoryGroup} {firstParentInChroot.FullName}");
+                }
+                catch(Exception exception)
+                {
+                    _logger.LogWarning(exception,
+                        "Could not determine first parent of '{dir}' in chroot '{chroot}' or failed to set permissions",
+                        directoryInfo.FullName, chrootDirectory.FullName);
+
+                    await ProcessUtil.QuickRun("chown", $"-R {username}:{SftpUserInventoryGroup} {directoryInfo.FullName}");
                 }
 
-                await ProcessUtil.QuickRun("chown", $"-R {username}:{SftpUserInventoryGroup} {firstParentInChroot.FullName}");
             }
 
             var sshDir = Path.Combine(homeDirPath, ".ssh");
