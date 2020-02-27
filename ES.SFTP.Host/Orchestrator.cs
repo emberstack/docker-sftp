@@ -385,7 +385,7 @@ namespace ES.SFTP.Host
                     {
                         firstParentInChroot = firstParentInChroot.Parent;
                     }
-                    await ProcessUtil.QuickRun("chown", $"-R {username}:{SftpUserInventoryGroup} {firstParentInChroot.FullName}");
+                    await ProcessUtil.QuickRun("chown", $"{username}:{SftpUserInventoryGroup} {firstParentInChroot.FullName}");
                 }
                 catch(Exception exception)
                 {
@@ -393,7 +393,7 @@ namespace ES.SFTP.Host
                         "Could not determine first parent of '{dir}' in chroot '{chroot}' or failed to set permissions",
                         directoryInfo.FullName, chrootDirectory.FullName);
 
-                    await ProcessUtil.QuickRun("chown", $"-R {username}:{SftpUserInventoryGroup} {directoryInfo.FullName}");
+                    await ProcessUtil.QuickRun("chown", $"{username}:{SftpUserInventoryGroup} {directoryInfo.FullName}");
                 }
 
             }
