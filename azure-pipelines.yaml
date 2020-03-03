@@ -193,7 +193,7 @@ stages:
           - script: |
               git config --global user.email "$(emberstack-agent-email)"
               git config --global user.name "$(emberstack-agent-name)"
-              git clone https://$(emberstack-agent-username):$(emberstack-agent-pat)@github.com/EmberStack/helm-charts.git
+              git clone https://$(emberstack-agent-username):$(emberstack-agent-pat)@github.com/emberstack/helm-charts.git
               
               mkdir -p helm-charts/charts
               cp $(Pipeline.Workspace)/helm/sftp-$(Build.BuildNumber).tgz  helm-charts/charts
