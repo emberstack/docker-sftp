@@ -211,7 +211,7 @@ stages:
             displayName: 'GitHub release (create)'
             inputs:
               gitHubConnection: GitHub
-              repositoryName: 'EmberStack/docker-sftp'
+              repositoryName: 'emberstack/docker-sftp'
               tagSource: userSpecifiedTag
               tag: 'v$(Build.BuildNumber)'
               title: 'Release v$(Build.BuildNumber)'
