@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -51,6 +51,7 @@ namespace ES.SFTP.Host
             if (!string.Equals(request.EventType, "open_session", StringComparison.OrdinalIgnoreCase)) return true;
             _logger.LogInformation("Preparing session for user '{user}'", request.Username);
             await PrepareUserForSftp(request.Username);
+            _logger.LogInformation("Session prepared for user '{user}'", request.Username);
             return true;
         }
 
@@ -378,24 +379,30 @@ namespace ES.SFTP.Host
 
                 try
                 {
-                    var firstParentInChroot = directoryInfo;
-                    while ((firstParentInChroot.Parent ??
-                            throw new InvalidOperationException("Cannot find first parent in chroot")).FullName !=
-                           chrootDirectory.FullName)
+                    if (IsSubDirectory(chrootDirectory, directoryInfo))
                     {
-                        firstParentInChroot = firstParentInChroot.Parent;
+                        var dir = directoryInfo;
+                        while (dir.FullName != chrootDirectory.FullName)
+                        {
+                            await ProcessUtil.QuickRun("chown", $"{username}:{SftpUserInventoryGroup} {dir.FullName}");
+                            dir = dir.Parent ?? chrootDirectory;
+                        }
                     }
-                    await ProcessUtil.QuickRun("chown", $"{username}:{SftpUserInventoryGroup} {firstParentInChroot.FullName}");
+                    else
+                    {
+                        _logger.LogWarning(
+                            "Directory '{dir}' is not withing chroot path '{chroot}'. Setting direct permissions.",
+                            directoryInfo.FullName, chrootDirectory.FullName);
+
+                        await ProcessUtil.QuickRun("chown",
+                            $"{username}:{SftpUserInventoryGroup} {directoryInfo.FullName}");
+                    }
                 }
-                catch(Exception exception)
+                catch (Exception exception)
                 {
-                    _logger.LogWarning(exception,
-                        "Could not determine first parent of '{dir}' in chroot '{chroot}' or failed to set permissions",
-                        directoryInfo.FullName, chrootDirectory.FullName);
-
-                    await ProcessUtil.QuickRun("chown", $"{username}:{SftpUserInventoryGroup} {directoryInfo.FullName}");
+                    _logger.LogWarning(exception, "Exception occured while setting permissions for '{dir}' ",
+                        directoryInfo.FullName);
                 }
-
             }
 
             var sshDir = Path.Combine(homeDirPath, ".ssh");
@@ -411,6 +418,8 @@ namespace ES.SFTP.Host
             await ProcessUtil.QuickRun("chown", $"{user.Username} {sshAuthKeysPath}");
             await ProcessUtil.QuickRun("chmod", $"600 {sshAuthKeysPath}");
         }
+
+        
 
         private async Task StartOpenSSH()
         {
@@ -447,6 +456,14 @@ namespace ES.SFTP.Host
             if (_config.Global.Logging.IgnoreNoIdentificationString &&
                 e.Data.Trim().StartsWith("Did not receive identification string from")) return;
             _logger.LogTrace($"sshd - {e.Data}");
+        }
+
+        private static bool IsSubDirectory(DirectoryInfo parent, DirectoryInfo directory)
+        {
+            if (parent == null) return false;
+            if (directory.Parent == null) return false;
+            if (directory.Parent.FullName == parent.FullName) return true;
+            return IsSubDirectory(parent, directory.Parent);
         }
     }
 }
