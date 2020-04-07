@@ -6,9 +6,15 @@ This project provides a Docker image for hosting a SFTP server. Included are `Do
 [![Docker Image](https://images.microbadger.com/badges/image/emberstack/sftp.svg)](https://microbadger.com/images/emberstack/sftp)
 [![Docker Pulls](https://img.shields.io/docker/pulls/emberstack/sftp.svg?style=flat-square)](https://hub.docker.com/r/emberstack/sftp)
 [![license](https://img.shields.io/github/license/emberstack/docker-sftp.svg?style=flat-square)](LICENSE)
-
+[![slack](https://img.shields.io/badge/join-emberstack%20on%20Slack-gray.svg?style=flat-square&longCache=true&logo=slack&colorB=green)](https://join.slack.com/t/emberstack/shared_invite/zt-8qyutopg-9ghwTq3OnHSm2tY9Sk5ULA)
 
 > Supports architectures: `amd64` and `arm`. Coming soon: `arm64`
+
+### Support
+If you need help or found a bug, please feel free to open an issue on the [emberstack/docker-sftp](https://github.com/emberstack/docker-sftp) GitHub project.  
+  
+You can also join our Slack workspace and talk to us:  
+[![slack](https://img.shields.io/badge/join-emberstack%20on%20Slack-gray.svg?style=flat-square&longCache=true&logo=slack&colorB=green)](https://join.slack.com/t/emberstack/shared_invite/zt-8qyutopg-9ghwTq3OnHSm2tY9Sk5ULA)
 
 ## Usage
 
