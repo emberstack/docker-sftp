@@ -1,7 +1,7 @@
 name: $(version).$(Rev:r)
 
 variables:
-  version: 2.0
+  version: 2.1
   buildConfiguration: "Release"
   imageRepository: "emberstack/sftp"
   DOCKER_CLI_EXPERIMENTAL: 'enabled'
@@ -10,6 +10,10 @@ trigger:
   branches:
     include:
       - "*"
+  paths:
+    include:
+    - src/*
+    - azure-pipelines.yaml
 
 stages:
   
@@ -30,10 +34,14 @@ stages:
 
           - task: HelmInstaller@1
             inputs:
-              helmVersionToInstall: 'latest'
+              helmVersionToInstall: '3.1.1'
 
           - script: |
-             helm package --destination $(Build.ArtifactStagingDirectory)/artifacts/helm --version $(Build.BuildNumber) --app-version $(Build.BuildNumber) deploy/helm/sftp
+             cp README.md src/deploy/helm/sftp/README.md
+            displayName: 'import README'
+
+          - script: |
+             helm package --destination $(Build.ArtifactStagingDirectory)/artifacts/helm --version $(Build.BuildNumber) --app-version $(Build.BuildNumber) src/deploy/helm/sftp
             displayName: 'Helm Package'
 
           - publish: '$(Build.ArtifactStagingDirectory)/artifacts/helm'
@@ -72,9 +80,9 @@ stages:
             inputs: 
               containerRegistry: 'Emberstack Docker Hub' 
               repository: $(imageRepository) 
-              Dockerfile: ES.SFTP.Host/Dockerfile 
+              Dockerfile: src/ES.SFTP.Host/Dockerfile 
               command: build 
-              buildContext: . 
+              buildContext: src
               tags: 'build-$(Build.BuildNumber)-arm32' 
  
           - task: Docker@2 
@@ -103,9 +111,9 @@ stages:
             inputs:
               containerRegistry: 'Emberstack Docker Hub'
               repository: $(imageRepository)
-              Dockerfile: ES.SFTP.Host/Dockerfile
+              Dockerfile: src/ES.SFTP.Host/Dockerfile
               command: build
-              buildContext: .
+              buildContext: src
               tags: 'build-$(Build.BuildNumber)-amd64'
 
           - task: Docker@2
