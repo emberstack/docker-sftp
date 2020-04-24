@@ -35,7 +35,7 @@ namespace ES.SFTP.Host.Business.Security
                 await ProcessUtil.QuickRun("usermod", $"-p \"*\" {username}");
             else
                 await ProcessUtil.QuickRun("bash",
-                    $"-c \"echo \\\"{username}:{password}\\\" | chpasswd {(passwordIsEncrypted ? "-e" : string.Empty)} \"");
+                    $"-c \"echo '{username}:{password}' | chpasswd {(passwordIsEncrypted ? "-e" : string.Empty)}\"");
         }
 
         public static async Task<int> UserGetId(string username)
