@@ -19,7 +19,7 @@ RUN apt-get update && \
     # - Remove default host keys
     rm -f /etc/ssh/ssh_host_*key*
 WORKDIR /app
-EXPOSE 22 80
+EXPOSE 22 25080
 
 FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build
 WORKDIR /src
