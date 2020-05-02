@@ -100,7 +100,7 @@ namespace ES.SFTP.Host
             var eventsScriptBuilder = new StringBuilder();
             eventsScriptBuilder.AppendLine("#!/bin/sh");
             eventsScriptBuilder.AppendLine(
-                "curl \"http://localhost/api/events/pam/generic?username=$PAM_USER&type=$PAM_TYPE&service=$PAM_SERVICE\"");
+                "curl \"http://localhost:25080/api/events/pam/generic?username=$PAM_USER&type=$PAM_TYPE&service=$PAM_SERVICE\"");
             await File.WriteAllTextAsync(hookScriptFile, eventsScriptBuilder.ToString());
             await ProcessUtil.QuickRun("chown", $"root:root \"{hookScriptFile}\"");
             await ProcessUtil.QuickRun("chmod", $"+x \"{hookScriptFile}\"");
