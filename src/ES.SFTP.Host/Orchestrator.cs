@@ -416,7 +416,7 @@ namespace ES.SFTP.Host
                 authKeysBuilder.AppendLine(await File.ReadAllTextAsync(file));
             await File.WriteAllTextAsync(sshAuthKeysPath, authKeysBuilder.ToString());
             await ProcessUtil.QuickRun("chown", $"{user.Username} {sshAuthKeysPath}");
-            await ProcessUtil.QuickRun("chmod", $"600 {sshAuthKeysPath}");
+            await ProcessUtil.QuickRun("chmod", $"400 {sshAuthKeysPath}");
         }
 
         
