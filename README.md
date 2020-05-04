@@ -132,6 +132,8 @@ You can customize the values of the helm deployment by using the following Value
 | `configuration.Global.Chroot.Directory`                     | Global chroot directory for the `sftp` user group. Can be overriden per-user     | `"%h"`                                                  |
 | `configuration.Global.Chroot.StartPath`                     | Start path for the `sftp` user group. Can be overriden per-user                  | `"sftp"`                                                |
 | `configuration.Global.Directories`                          | Directories that get created for all `sftp` users. Can be appended per user      | `["sftp"]`                                              |
+| `configuration.Global.HostKeys.Ed25519`                     | Set the server's ED25519 private key                                             | `""`                                                    |
+| `configuration.Global.HostKeys.Rsa`                         | Set the server's RSA private key                                                 | `""`                                                    |
 | `configuration.Users`                                       | Array of users and their properties                                              | Contains `demo` user by default                         |
 | `configuration.Users[].Username`                            | Set the user's username                                                          | N/A                                                     |
 | `configuration.Users[].Password`                            | Set the user's password. If empty or `null`, password authentication is disabled | N/A                                                     |
