@@ -11,5 +11,6 @@ namespace ES.SFTP.Host.Business.Configuration
         public int? GID { get; set; }
         public ChrootDefinition Chroot { get; set; }
         public List<string> Directories { get; set; } = new List<string>();
+        public List<string> PublicKeys { get; set; } = new List<string>();
     }
 }

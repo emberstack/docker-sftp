@@ -413,7 +413,15 @@ namespace ES.SFTP.Host
             if (File.Exists(sshAuthKeysPath)) File.Delete(sshAuthKeysPath);
             var authKeysBuilder = new StringBuilder();
             foreach (var file in Directory.GetFiles(sshKeysDir))
+            {
+                _logger.LogDebug("Adding public key '{file}' for user '{user}'", file, username);
                 authKeysBuilder.AppendLine(await File.ReadAllTextAsync(file));
+            }
+            foreach (var publicKey in user.PublicKeys)
+            {
+                _logger.LogDebug("Adding public key from config for user '{user}'", username);
+                authKeysBuilder.AppendLine(publicKey);
+            }
             await File.WriteAllTextAsync(sshAuthKeysPath, authKeysBuilder.ToString());
             await ProcessUtil.QuickRun("chown", $"{user.Username} {sshAuthKeysPath}");
             await ProcessUtil.QuickRun("chmod", $"400 {sshAuthKeysPath}");

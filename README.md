@@ -136,6 +136,7 @@ You can customize the values of the helm deployment by using the following Value
 | `configuration.Users[].Username`                            | Set the user's username                                                          | N/A                                                     |
 | `configuration.Users[].Password`                            | Set the user's password. If empty or `null`, password authentication is disabled | N/A                                                     |
 | `configuration.Users[].PasswordIsEncrypted`                 | `true` or `false`. Indicates if the password value is already encrypted          | `false`                                                 |
+| `configuration.Users[].PublicKeys`                          | Set the user's public keys                                                       | `[]`                                                    |
 | `configuration.Users[].UID`                                 | Sets the user's UID.                                                             | `null`                                                  |
 | `configuration.Users[].GID`                                 | Sets the user's GID. A group is created for this value and the user is included  | `null`                                                  |
 | `configuration.Users[].Chroot`                              | If set, will override global `Chroot` settings for this user.                    | `null`                                                  |
