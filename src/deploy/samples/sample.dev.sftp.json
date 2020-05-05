@@ -4,7 +4,10 @@
             "Directory": "%h",
             "StartPath": "sftp"
         },
-        "Directories": ["sftp"]
+        "Directories": ["sftp"],
+        "HostKeys": {
+            "Ed25519": "-----BEGIN OPENSSH PRIVATE KEY-----\nb3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW\nQyNTUxOQAAACBvlz4T2Fh9PKKeVhSupzXsBYVt44VJcb1554gRLKS2oAAAAIiJdbTtiXW0\n7QAAAAtzc2gtZWQyNTUxOQAAACBvlz4T2Fh9PKKeVhSupzXsBYVt44VJcb1554gRLKS2oA\nAAAEDI/igTE3dx3UC0As1d4kL0BNDaA3MkO9lDyWXqfErITm+XPhPYWH08op5WFK6nNewF\nhW3jhUlxvXnniBEspLagAAAAAAECAwQF\n-----END OPENSSH PRIVATE KEY-----\n"
+        }
     },
     "Users": [
         {

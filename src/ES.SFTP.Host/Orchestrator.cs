@@ -24,10 +24,10 @@ namespace ES.SFTP.Host
         private const string SshHostKeysDirPath = "/etc/ssh/keys";
         private const string SshConfigPath = "/etc/ssh/sshd_config";
 
-        private readonly Dictionary<string, string> _hostKeyFiles = new Dictionary<string, string>
+        private readonly List<HostKeyType> _hostKeyTypes = new List<HostKeyType>
         {
-            {"ssh_host_ed25519_key", "-t ed25519 -f {0} -N \"\""},
-            {"ssh_host_rsa_key", "-t rsa -b 4096 -f {0} -N \"\""}
+            new HostKeyType{Type = "Ed25519", KeygenArgs = "-t ed25519 -f {0} -N \"\"", File = "ssh_host_ed25519_key"},
+            new HostKeyType{Type = "Rsa", KeygenArgs = "-t rsa -b 4096 -f {0} -N \"\"", File = "ssh_host_rsa_key"},
         };
 
         private readonly ILogger<Orchestrator> _logger;
@@ -132,6 +132,7 @@ namespace ES.SFTP.Host
             config.Global.Directories ??= new List<string>();
             config.Global.Logging ??= new LoggingDefinition();
             config.Global.Chroot ??= new ChrootDefinition();
+            config.Global.HostKeys ??= new HostKeyDefinition();
             if (string.IsNullOrWhiteSpace(config.Global.Chroot.Directory)) config.Global.Chroot.Directory = "%h";
             if (string.IsNullOrWhiteSpace(config.Global.Chroot.StartPath)) config.Global.Chroot.StartPath = null;
 
@@ -176,14 +177,22 @@ namespace ES.SFTP.Host
             if (!Directory.Exists(SshHostKeysDirPath))
                 Directory.CreateDirectory(SshHostKeysDirPath);
 
-
-            foreach (var hostKeyFile in _hostKeyFiles)
+            foreach (var hostKeyType in _hostKeyTypes)
             {
-                var filePath = Path.Combine(SshHostKeysDirPath, hostKeyFile.Key);
+                var filePath = Path.Combine(SshHostKeysDirPath, hostKeyType.File);
                 if (File.Exists(filePath)) continue;
+                var keyConfig = (string)_config.Global.HostKeys.GetType().GetProperty(hostKeyType.Type).GetValue(_config.Global.HostKeys, null);
+                if (!string.IsNullOrWhiteSpace(keyConfig))
+                {
+                _logger.LogDebug("Writing host key file '{file}' from config", filePath);
+                await File.WriteAllTextAsync(filePath, keyConfig); 
+                }
+                else
+                {
                 _logger.LogDebug("Generating host key file '{file}'", filePath);
-                var keygenArgs = string.Format(hostKeyFile.Value, filePath);
+                var keygenArgs = string.Format(hostKeyType.KeygenArgs, filePath);
                 await ProcessUtil.QuickRun("ssh-keygen", keygenArgs);
+                }
             }
 
             foreach (var file in Directory.GetFiles(SshHostKeysDirPath))
