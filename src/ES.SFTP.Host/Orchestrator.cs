@@ -184,14 +184,14 @@ namespace ES.SFTP.Host
                 var keyConfig = (string)_config.Global.HostKeys.GetType().GetProperty(hostKeyType.Type).GetValue(_config.Global.HostKeys, null);
                 if (!string.IsNullOrWhiteSpace(keyConfig))
                 {
-                _logger.LogDebug("Writing host key file '{file}' from config", filePath);
-                await File.WriteAllTextAsync(filePath, keyConfig); 
+                    _logger.LogDebug("Writing host key file '{file}' from config", filePath);
+                    await File.WriteAllTextAsync(filePath, keyConfig);
                 }
                 else
                 {
-                _logger.LogDebug("Generating host key file '{file}'", filePath);
-                var keygenArgs = string.Format(hostKeyType.KeygenArgs, filePath);
-                await ProcessUtil.QuickRun("ssh-keygen", keygenArgs);
+                    _logger.LogDebug("Generating host key file '{file}'", filePath);
+                    var keygenArgs = string.Format(hostKeyType.KeygenArgs, filePath);
+                    await ProcessUtil.QuickRun("ssh-keygen", keygenArgs);
                 }
             }
 
@@ -436,7 +436,7 @@ namespace ES.SFTP.Host
             await ProcessUtil.QuickRun("chmod", $"400 {sshAuthKeysPath}");
         }
 
-        
+
 
         private async Task StartOpenSSH()
         {
