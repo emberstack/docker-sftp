@@ -1,6 +1,6 @@
 ﻿using MediatR;
 
-namespace ES.SFTP.Host.Messages
+namespace ES.SFTP.Host.Messages.Pam
 {
     public class PamEventRequest : IRequest<bool>
     {

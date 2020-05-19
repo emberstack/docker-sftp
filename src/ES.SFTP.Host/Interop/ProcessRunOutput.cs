@@ -1,4 +1,4 @@
-﻿namespace ES.SFTP.Host.Business.Interop
+﻿namespace ES.SFTP.Host.Interop
 {
     public class ProcessRunOutput
     {

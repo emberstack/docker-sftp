@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo "Session event '$1' for '$2'"

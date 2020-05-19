@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using ES.SFTP.Host.Business.Interop;
+using ES.SFTP.Host.Interop;
 
-namespace ES.SFTP.Host.Business.Security
+namespace ES.SFTP.Host.Security
 {
     public class GroupUtil
     {
@@ -26,6 +26,12 @@ namespace ES.SFTP.Host.Business.Security
             await ProcessUtil.QuickRun("usermod", $"-a -G {group} {username}");
         }
 
+
+        public static async Task GroupRemoveUser(string group, string username)
+        {
+            await ProcessUtil.QuickRun("usermod", $"-G {group} {username}");
+        }
+
         public static async Task<IReadOnlyList<string>> GroupListUsers(string group)
         {
             var command = await ProcessUtil.QuickRun("members", group, false);
@@ -33,6 +39,18 @@ namespace ES.SFTP.Host.Business.Security
                 throw new Exception($"Get group members command failed with exit code {command.ExitCode} and message:" +
                                     $"{Environment.NewLine}{command.Output}");
             return command.Output.Split(' ', StringSplitOptions.RemoveEmptyEntries).OrderBy(s => s).ToList();
+        }
+
+        public static async Task<int> GroupGetId(string groupNameOrId)
+        {
+            var command = await ProcessUtil.QuickRun("getent", $"group {groupNameOrId}");
+            var groupEntryValues = command.Output.Split(":");
+            return int.Parse(groupEntryValues[2]);
+        }
+
+        public static async Task GroupSetId(string groupNameOrId, int id)
+        {
+            await ProcessUtil.QuickRun("groupmod", $"-g {id} {groupNameOrId}");
         }
     }
 }

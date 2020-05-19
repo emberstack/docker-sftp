@@ -9,6 +9,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="config\hooks\**" />
+    <Content Remove="config\hooks\**" />
+    <EmbeddedResource Remove="config\hooks\**" />
+    <None Remove="config\hooks\**" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Remove="config\onlogin.sh" />
     <None Remove="config\sssd.conf" />
   </ItemGroup>

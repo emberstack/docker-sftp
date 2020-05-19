@@ -1,10 +1,10 @@
 ﻿using System.Threading.Tasks;
-using ES.SFTP.Host.Messages;
+using ES.SFTP.Host.Messages.Pam;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-namespace ES.SFTP.Host.Controllers
+namespace ES.SFTP.Host.Api
 {
     [Route("api/events/pam")]
     public class PamEventsController : Controller
@@ -23,8 +23,8 @@ namespace ES.SFTP.Host.Controllers
         [Route("generic")]
         public async Task<IActionResult> OnGenericPamEvent(string username, string type, string service)
         {
-            _logger.LogInformation("Received event for user '{username}' with type '{type}', {service}", username, type,
-                service);
+            _logger.LogDebug("Received event for user '{username}' with type '{type}', {service}",
+                username, type, service);
             var response = await _mediator.Send(new PamEventRequest
             {
                 Username = username,

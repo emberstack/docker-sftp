@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
-using ES.SFTP.Host.Business.Interop;
+using ES.SFTP.Host.Interop;
 
-namespace ES.SFTP.Host.Business.Security
+namespace ES.SFTP.Host.Security
 {
     public class UserUtil
     {

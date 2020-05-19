@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ES.SFTP.Host.Business.Interop
+namespace ES.SFTP.Host.Interop
 {
     public class ProcessUtil
     {
@@ -32,9 +32,14 @@ namespace ES.SFTP.Host.Business.Interop
                 process.BeginErrorReadLine();
                 process.WaitForExit();
             }
-            catch (Exception)
+            catch (Exception exception)
             {
                 if (throwOnError) throw;
+                return Task.FromResult(new ProcessRunOutput
+                {
+                    ExitCode = 1,
+                    Output = exception.Message
+                });
             }
 
             var output = outputStringBuilder.ToString();
