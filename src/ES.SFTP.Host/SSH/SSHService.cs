@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace ES.SFTP.Host.SSH
 {
-    public class SSHService : IHostedService
+    public class SSHService : IHostedService, INotificationHandler<ConfigurationChanged>
     {
         private const string SshDirPath = "/etc/ssh";
         private static readonly string KeysImportDirPath = Path.Combine(SshDirPath, "keys");
@@ -208,6 +208,11 @@ namespace ES.SFTP.Host.SSH
                     throw new Exception(
                         $"Could not stop existing sshd processes.{Environment.NewLine}{command.Output}");
             }
+        }
+
+        public async Task Handle(ConfigurationChanged notification, CancellationToken cancellationToken)
+        {
+            await RestartService();
         }
     }
 }

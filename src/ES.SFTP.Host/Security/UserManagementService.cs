@@ -8,19 +8,19 @@ using System.Threading.Tasks;
 using ES.SFTP.Host.Configuration.Elements;
 using ES.SFTP.Host.Interop;
 using ES.SFTP.Host.Messages.Configuration;
+using ES.SFTP.Host.Messages.Events;
 using MediatR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 namespace ES.SFTP.Host.Security
 {
-    public class UserManagementService : IHostedService
+    public class UserManagementService : IHostedService, INotificationHandler<ConfigurationChanged>
     {
         private const string HomeBasePath = "/home";
         private const string SftpUserInventoryGroup = "sftp-user-inventory";
         private readonly ILogger _logger;
         private readonly IMediator _mediator;
-        private SftpConfiguration _config;
 
         public UserManagementService(ILogger<UserManagementService> logger, IMediator mediator)
         {
@@ -33,7 +33,7 @@ namespace ES.SFTP.Host.Security
         public async Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogDebug("Starting");
-            _config = await _mediator.Send(new SftpConfigurationRequest());
+            
 
             _logger.LogDebug("Ensuring '{home}' directory exists and has correct permissions", HomeBasePath);
             Directory.CreateDirectory(HomeBasePath);
@@ -60,12 +60,14 @@ namespace ES.SFTP.Host.Security
 
         private async Task SyncUsersAndGroups()
         {
+            var config = await _mediator.Send(new SftpConfigurationRequest());
+
             _logger.LogInformation("Synchronizing users and groups");
 
 
             //Remove users that do not exist in config anymore
             var existingUsers = await GroupUtil.GroupListUsers(SftpUserInventoryGroup);
-            var toRemove = existingUsers.Where(s => !_config.Users.Select(t => t.Username).Contains(s)).ToList();
+            var toRemove = existingUsers.Where(s => !config.Users.Select(t => t.Username).Contains(s)).ToList();
             foreach (var user in toRemove)
             {
                 _logger.LogDebug("Removing user '{user}'", user, SftpUserInventoryGroup);
@@ -73,7 +75,7 @@ namespace ES.SFTP.Host.Security
             }
 
 
-            foreach (var user in _config.Users)
+            foreach (var user in config.Users)
             {
                 _logger.LogInformation("Processing user '{user}'", user.Username);
 
@@ -135,7 +137,7 @@ namespace ES.SFTP.Host.Security
             }
 
 
-            foreach (var groupDefinition in _config.Groups)
+            foreach (var groupDefinition in config.Groups)
             {
                 _logger.LogInformation("Processing group '{group}'", groupDefinition.Name);
 
@@ -175,6 +177,11 @@ namespace ES.SFTP.Host.Security
                     await GroupUtil.GroupRemoveUser(groupDefinition.Name, user);
                 }
             }
+        }
+
+        public async Task Handle(ConfigurationChanged notification, CancellationToken cancellationToken)
+        {
+            await SyncUsersAndGroups();
         }
     }
 }

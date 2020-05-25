@@ -4,6 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using ES.SFTP.Host.Configuration.Elements;
 using ES.SFTP.Host.Messages.Configuration;
+using ES.SFTP.Host.Messages.Events;
 using MediatR;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -15,15 +16,18 @@ namespace ES.SFTP.Host.Configuration
     {
         private readonly ILogger _logger;
         private readonly IOptionsMonitor<SftpConfiguration> _sftpOptionsMonitor;
+        private readonly IMediator _mediator;
         private SftpConfiguration _config;
         private IDisposable _sftpOptionsMonitorChangeHandler;
 
 
         public ConfigurationService(ILogger<ConfigurationService> logger,
-            IOptionsMonitor<SftpConfiguration> sftpOptionsMonitor)
+            IOptionsMonitor<SftpConfiguration> sftpOptionsMonitor,
+            IMediator mediator)
         {
             _logger = logger;
             _sftpOptionsMonitor = sftpOptionsMonitor;
+            _mediator = mediator;
         }
 
 
@@ -54,9 +58,9 @@ namespace ES.SFTP.Host.Configuration
 
         private void OnSftpConfigurationChanged(SftpConfiguration arg1, string arg2)
         {
-            _logger.LogInformation(
-                "SFTP Configuration was changed. " +
-                "Service needs to be restarted in order for the updates to be applied");
+            _logger.LogInformation("SFTP Configuration was changed.");
+            UpdateConfiguration().Wait();
+            _mediator.Publish(new ConfigurationChanged()).ConfigureAwait(false);
         }
 
         private Task UpdateConfiguration()
