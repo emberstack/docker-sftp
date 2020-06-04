@@ -13,123 +13,88 @@ trigger:
   paths:
     include:
     - src/*
+    - .devops/*
     - azure-pipelines.yaml
 
 stages:
-  
-  - stage: ci
-    displayName: "CI"
-    jobs:
-      - job: build
-        displayName: "Build"
-        pool:
-          vmImage: ubuntu-latest
-        steps:
-          - script: |
-             mkdir -p artifacts/helm
-            workingDirectory: '$(Build.ArtifactStagingDirectory)'
-            displayName: 'Create Artifacts directories'
-
-          - task: HelmInstaller@1
-            inputs:
-              helmVersionToInstall: '3.1.1'
-
-          - script: |
-             cp README.md src/deploy/helm/sftp/README.md
-            displayName: 'import README'
-
-          - script: |
-             helm package --destination $(Build.ArtifactStagingDirectory)/artifacts/helm --version $(Build.BuildNumber) --app-version $(Build.BuildNumber) src/deploy/helm/sftp
-            displayName: 'Helm Package'
-
-          - publish: '$(Build.ArtifactStagingDirectory)/artifacts/helm'
-            artifact: 'helm'
-
-          - task: DockerInstaller@0
-            displayName: 'Install docker'
-            inputs:
-              dockerVersion: '19.03.9'
-
-          - script: |
-              docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
-              docker buildx rm builder
-              docker buildx create --name builder --driver docker-container --use
-              docker buildx inspect --bootstrap
-              docker buildx build --push --platform linux/amd64 -t $(imageRepository):build-$(Build.BuildNumber)-amd64 -f src/ES.SFTP.Host/Dockerfile src
-              docker buildx build --push --platform linux/arm   -t $(imageRepository):build-$(Build.BuildNumber)-arm   -f src/ES.SFTP.Host/Dockerfile src
-              docker buildx build --push --platform linux/arm64 -t $(imageRepository):build-$(Build.BuildNumber)-arm64 -f src/ES.SFTP.Host/Dockerfile src
-              docker pull $(imageRepository):build-$(Build.BuildNumber)-amd64
-              docker pull $(imageRepository):build-$(Build.BuildNumber)-arm
-              docker pull $(imageRepository):build-$(Build.BuildNumber)-arm64
-              docker manifest create  $(imageRepository):build-$(Build.BuildNumber) $(imageRepository):build-$(Build.BuildNumber)-amd64 $(imageRepository):build-$(Build.BuildNumber)-arm $(imageRepository):build-$(Build.BuildNumber)-arm64
-              docker manifest inspect $(imageRepository):build-$(Build.BuildNumber)
-              docker manifest push    $(imageRepository):build-$(Build.BuildNumber)
-            displayName: "Create and push multi-arch manifest"
+- template: .devops/pipelines/stage.ci.yaml
+  parameters:
+    architectures:
+    - arch: amd64
+      pool: winromulus-devops
+    - arch: arm
+      pool: winromulus-devops
+    - arch: arm64
+      pool: winromulus-devops
 
 
-  - stage: cd
-    displayName: "CD"
-    dependsOn: 'ci'
-    condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'Manual'), in(variables['Build.SourceBranchName'], 'master'))
-    jobs:
-      - job: release
-        displayName: "Release"
-        pool:
-          vmImage: ubuntu-latest
-        variables:
-          - group: "OpenSource.GitHub"
-        steps:
-
-          - checkout: none
-
-          - download: current
-            artifact: 'helm'    
-
-          - task: Docker@2
-            displayName: "Docker Login"
-            inputs:
-              containerRegistry: "Emberstack Docker Hub"
-              command: login
-
-          - task: HelmInstaller@1
-            inputs:
-              helmVersionToInstall: 'latest'
-
-          - script: |
-              docker pull $(imageRepository):build-$(Build.BuildNumber)-amd64
-              docker pull $(imageRepository):build-$(Build.BuildNumber)-arm
-              docker pull $(imageRepository):build-$(Build.BuildNumber)-arm64
-              docker manifest create $(imageRepository):$(Build.BuildNumber) $(imageRepository):build-$(Build.BuildNumber)-amd64 $(imageRepository):build-$(Build.BuildNumber)-arm $(imageRepository):build-$(Build.BuildNumber)-arm64
-              docker manifest create $(imageRepository):latest               $(imageRepository):build-$(Build.BuildNumber)-amd64 $(imageRepository):build-$(Build.BuildNumber)-arm $(imageRepository):build-$(Build.BuildNumber)-arm64
-              docker manifest push $(imageRepository):$(Build.BuildNumber)
-              docker manifest push $(imageRepository):latest
-            displayName: 'docker pull, tag and push'
-
-          - script: |
-              git config --global user.email "$(emberstack-agent-email)"
-              git config --global user.name "$(emberstack-agent-name)"
-              git clone https://$(emberstack-agent-username):$(emberstack-agent-pat)@github.com/emberstack/helm-charts.git
-              
-              mkdir -p helm-charts/charts
-              cp $(Pipeline.Workspace)/helm/sftp-$(Build.BuildNumber).tgz  helm-charts/charts
-              
-              cd helm-charts
-              rm index.yaml
-              helm repo index ./
-              git add .
-              git status
-              git commit -m "Added sftp-$(Build.BuildNumber).tgz"
-              git push
-            displayName: 'Add chart to GitHub repository'
-
-          - task: GitHubRelease@1
-            displayName: 'GitHub release (create)'
-            inputs:
-              gitHubConnection: GitHub
-              repositoryName: 'emberstack/docker-sftp'
-              tagSource: userSpecifiedTag
-              tag: 'v$(Build.BuildNumber)'
-              title: 'Release v$(Build.BuildNumber)'
-              releaseNotesSource: inline
-              releaseNotes: 'The release process is automated.'
-    
+- stage: cd
+  displayName: "CD"
+  dependsOn: 'ci'
+  condition: and(succeeded(), in(variables['Build.Reason'], 'IndividualCI', 'Manual'), in(variables['Build.SourceBranchName'], 'master'))
+  jobs:
+  - job: release
+    displayName: "Release"
+    pool:
+      vmImage: ubuntu-latest
+    variables:
+      - group: "OpenSource.GitHub"
+      - name: "manifest.images"
+        value: ""
+    steps:
+      - checkout: none
+      - download: current
+        artifact: 'helm'
+        displayName: "Download helm artifact"
+      - task: DockerInstaller@0
+        displayName: 'Docker install'
+        inputs:
+          dockerVersion: '19.03.5'    
+      - task: Docker@2
+        displayName: "Docker login"
+        inputs:
+          containerRegistry: "Emberstack Docker Hub"
+          command: login
+      - task: HelmInstaller@1
+        inputs:
+          helmVersionToInstall: '3.1.1'
+        displayName: "Helm install"
+      - ${{ each architecture in parameters.architectures }}:
+        - script: |
+            docker pull $(imageRepository):build-$(Build.BuildNumber)-${{ architecture.arch }}
+            echo '##vso[task.setvariable variable=manifest.images]$(manifest.images)  $(imageRepository):build-$(Build.BuildNumber)-${{ architecture.arch }}'
+            docker tag $(imageRepository):build-$(Build.BuildNumber)-${{ architecture.arch }} $(imageRepository):(Build.BuildNumber)-${{ architecture.arch }}
+            docker push $(imageRepository):(Build.BuildNumber)-${{ architecture.arch }}
+          displayName: "Retag ${{ architecture.arch }} image"
+      - script: |
+          docker manifest create  $(imageRepository):$(Build.BuildNumber) $(manifest.images)
+          docker manifest push    $(imageRepository):$(Build.BuildNumber)
+          docker manifest create  $(imageRepository):latest               $(manifest.images)
+          docker manifest push    $(imageRepository):latest
+        displayName: 'Create and push multi-arch manifest'
+      - script: |
+          git config --global user.email "$(emberstack-agent-email)"
+          git config --global user.name "$(emberstack-agent-name)"
+          git clone https://$(emberstack-agent-username):$(emberstack-agent-pat)@github.com/emberstack/helm-charts.git
+          
+          mkdir -p helm-charts/charts
+          cp $(Pipeline.Workspace)/helm/sftp-$(Build.BuildNumber).tgz  helm-charts/charts
+          
+          cd helm-charts
+          rm index.yaml
+          helm repo index ./
+          git add .
+          git status
+          git commit -m "Added sftp-$(Build.BuildNumber).tgz"
+          git push
+        displayName: 'Add chart to GitHub repository'
+      - task: GitHubRelease@1
+        displayName: 'GitHub release (create)'
+        inputs:
+          gitHubConnection: GitHub
+          repositoryName: 'emberstack/docker-sftp'
+          tagSource: userSpecifiedTag
+          tag: 'v$(Build.BuildNumber)'
+          title: 'Release v$(Build.BuildNumber)'
+          releaseNotesSource: inline
+          releaseNotes: 'The release process is automated.'
