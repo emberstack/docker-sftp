@@ -4,13 +4,9 @@
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
     <DockerfileTag>emberstack/sftp:dev</DockerfileTag>
-    <DockerfileRunArguments>-p 2222:22 --name sftpdev</DockerfileRunArguments>
+    <DockerfileRunArguments>-p 2222:22 --name sftpdev --privileged</DockerfileRunArguments>
+    <LangVersion>8</LangVersion>
   </PropertyGroup>
-
-  <ItemGroup>
-    <None Remove="config\onlogin.sh" />
-    <None Remove="config\sssd.conf" />
-  </ItemGroup>
 
   <ItemGroup>
     <Content Include="config\sssd.conf">

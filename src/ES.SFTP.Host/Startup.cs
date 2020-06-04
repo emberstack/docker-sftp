@@ -1,6 +1,9 @@
 using System.Reflection;
 using Autofac;
-using ES.SFTP.Host.Business.Configuration;
+using ES.SFTP.Host.Configuration;
+using ES.SFTP.Host.Configuration.Elements;
+using ES.SFTP.Host.Security;
+using ES.SFTP.Host.SSH;
 using MediatR;
 using MediatR.Pipeline;
 using Microsoft.AspNetCore.Builder;
@@ -33,7 +36,6 @@ namespace ES.SFTP.Host
             builder.RegisterAssemblyTypes(typeof(IMediator).GetTypeInfo().Assembly).AsImplementedInterfaces();
             builder.RegisterGeneric(typeof(RequestPostProcessorBehavior<,>)).As(typeof(IPipelineBehavior<,>));
             builder.RegisterGeneric(typeof(RequestPreProcessorBehavior<,>)).As(typeof(IPipelineBehavior<,>));
-
             builder.Register<ServiceFactory>(ctx =>
             {
                 var c = ctx.Resolve<IComponentContext>();
@@ -41,8 +43,12 @@ namespace ES.SFTP.Host
             });
 
 
-            builder.RegisterType<Orchestrator>().AsSelf().AsImplementedInterfaces().SingleInstance();
-            builder.RegisterType<HostedService>().AsSelf().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterType<SessionHandler>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterType<HookRunner>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterType<ConfigurationService>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterType<AuthenticationService>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterType<UserManagementService>().AsImplementedInterfaces().SingleInstance();
+            builder.RegisterType<SSHService>().AsImplementedInterfaces().SingleInstance();
         }
 
         // ReSharper disable once UnusedMember.Global
