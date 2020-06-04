@@ -38,8 +38,8 @@ stages:
         - script: |
             docker pull $(imageRepository):build-$(Build.BuildNumber)-${{ architecture.arch }}
             echo '##vso[task.setvariable variable=manifest.images]$(manifest.images)  $(imageRepository):build-$(Build.BuildNumber)-${{ architecture.arch }}'
-            docker tag $(imageRepository):build-$(Build.BuildNumber)-${{ architecture.arch }} $(imageRepository):(Build.BuildNumber)-${{ architecture.arch }}
-            docker push $(imageRepository):(Build.BuildNumber)-${{ architecture.arch }}
+            docker tag $(imageRepository):build-$(Build.BuildNumber)-${{ architecture.arch }} $(imageRepository):$(Build.BuildNumber)-${{ architecture.arch }}
+            docker push $(imageRepository):$(Build.BuildNumber)-${{ architecture.arch }}
           displayName: "Retag ${{ architecture.arch }} image"
       - script: |
           docker manifest create  $(imageRepository):$(Build.BuildNumber) $(manifest.images)
