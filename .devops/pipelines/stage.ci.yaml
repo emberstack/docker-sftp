@@ -63,7 +63,6 @@ stages:
             echo '##vso[task.setvariable variable=manifest.images]$(manifest.images)  $(imageRepository):build-$(Build.BuildNumber)-${{ architecture.arch }}'
           displayName: "Pull ${{ architecture.arch }} image"   
       - script: |
-          echo "$(manifest.images)"
           docker manifest create  $(imageRepository):build-$(Build.BuildNumber) $(manifest.images)
           docker manifest inspect $(imageRepository):build-$(Build.BuildNumber)
           docker manifest push    $(imageRepository):build-$(Build.BuildNumber)
