@@ -70,6 +70,12 @@ namespace ES.SFTP.Host.SSH
                 "AllowTcpForwarding no"
             };
 
+            sshdConfig.AllowUsers.AddRange(sftpConfig.Users.Select(s =>
+                s.AllowedHosts.Any()
+                ? $"{s.Username}@{String.Join(",", s.AllowedHosts)}"
+                : s.Username)
+            );
+
             sshdConfig.MatchBlocks.AddRange(exceptionalUsers.Select(s => new MatchBlock
             {
                 Criteria = MatchBlock.MatchCriteria.User,

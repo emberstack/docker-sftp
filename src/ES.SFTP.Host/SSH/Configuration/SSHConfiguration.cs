@@ -7,6 +7,8 @@ namespace ES.SFTP.Host.SSH.Configuration
     {
         public List<MatchBlock> MatchBlocks { get; } = new List<MatchBlock>();
 
+        public List<string> AllowUsers { get; } = new List<string>();
+
         public override string ToString()
         {
             var builder = new StringBuilder();
@@ -29,6 +31,8 @@ namespace ES.SFTP.Host.SSH.Configuration
             builder.AppendLine("# Subsystem");
             builder.AppendLine("Subsystem sftp internal-sftp");
             builder.AppendLine();
+            builder.AppendLine("# Allowed users");
+            builder.AppendLine($"AllowUsers {System.String.Join(" ", AllowUsers)}");
             builder.AppendLine();
             builder.AppendLine("# Match blocks");
             foreach (var matchBlock in MatchBlocks)
