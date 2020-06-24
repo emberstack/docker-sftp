@@ -2,13 +2,13 @@ FROM mcr.microsoft.com/dotnet/core/aspnet:3.1 AS base
 RUN apt-get update && \
     # - Install required packages
     #
-    apt-get -y install members acl iputils-ping nano && \
+    apt-get -y install members acl iputils-ping nano tini && \
     #
     # - Install openssh-server
     apt-get -y install openssh-server && \
     #
-	# - Install sssd
-	apt-get -y install sssd libpam-sss libnss-sss && \
+    # - Install sssd
+    apt-get -y install sssd libpam-sss libnss-sss && \
     #
     # - Cleanup
     rm -rf /var/lib/apt/lists/* && \
@@ -35,4 +35,4 @@ RUN dotnet publish "ES.SFTP.Host.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "ES.SFTP.Host.dll"]
+ENTRYPOINT ["tini", "--", "dotnet", "ES.SFTP.Host.dll"]
