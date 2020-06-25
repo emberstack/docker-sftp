@@ -7,6 +7,7 @@ namespace ES.SFTP.Host.Configuration.Elements
         public string Username { get; set; }
         public string Password { get; set; }
         public bool PasswordIsEncrypted { get; set; }
+        public List<string> AllowedHosts { get; set; } = new List<string>();
 
         // ReSharper disable once InconsistentNaming
         public int? UID { get; set; }
