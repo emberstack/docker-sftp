@@ -112,7 +112,7 @@ namespace ES.SFTP.Host.Security
 
                 var homeDir = Directory.CreateDirectory(Path.Combine(HomeBasePath, user.Username));
                 await ProcessUtil.QuickRun("chown", $"root:root {homeDir.FullName}");
-                await ProcessUtil.QuickRun("chmod", $"700 {homeDir.FullName}");
+                await ProcessUtil.QuickRun("chmod", $"711 {homeDir.FullName}");
 
                 var sshDir = Directory.CreateDirectory(Path.Combine(homeDir.FullName, ".ssh"));
                 var sshKeysDir = Directory.CreateDirectory(Path.Combine(sshDir.FullName, "keys"));
