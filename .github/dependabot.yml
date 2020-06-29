@@ -5,8 +5,3 @@ updates:
   schedule:
     interval: daily
   open-pull-requests-limit: 10
-- package-ecosystem: docker
-  directory: "/src/ES.SFTP.Host"
-  schedule:
-    interval: daily
-  open-pull-requests-limit: 10
