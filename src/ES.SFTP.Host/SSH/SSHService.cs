@@ -25,6 +25,7 @@ namespace ES.SFTP.Host.SSH
         private readonly IMediator _mediator;
         private bool _loggingIgnoreNoIdentificationString;
         private Process _serverProcess;
+        private Action _serviceProcessExitAction;
 
 
         public SSHService(ILogger<SSHService> logger, IMediator mediator)
@@ -163,6 +164,21 @@ namespace ES.SFTP.Host.SSH
         private async Task StartOpenSSH()
         {
             _logger.LogInformation("Starting 'sshd' process");
+            _serviceProcessExitAction = () =>
+            {
+                _logger.LogWarning("'sshd' process has stopped. Restarting process.");
+                RestartService().Wait();
+            };
+
+            void ListenForExit()
+            {
+                //Use this approach since the Exited event does not trigger on process crash
+                Task.Run(() =>
+                {
+                    _serverProcess.WaitForExit();
+                    _serviceProcessExitAction?.Invoke();
+                });
+            }
             _serverProcess = new Process
             {
                 StartInfo =
@@ -180,6 +196,7 @@ namespace ES.SFTP.Host.SSH
             _serverProcess.OutputDataReceived += OnSSHOutput;
             _serverProcess.ErrorDataReceived += OnSSHOutput;
             _serverProcess.Start();
+            ListenForExit();
             _serverProcess.BeginOutputReadLine();
             _serverProcess.BeginErrorReadLine();
             await _mediator.Publish(new ServerStartupEvent());
@@ -198,6 +215,7 @@ namespace ES.SFTP.Host.SSH
             if (_serverProcess != null)
             {
                 _logger.LogDebug("Stopping 'sshd' process");
+                _serviceProcessExitAction = null;
                 _serverProcess.Kill(true);
                 _serverProcess.OutputDataReceived -= OnSSHOutput;
                 _serverProcess.ErrorDataReceived -= OnSSHOutput;
