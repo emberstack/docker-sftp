@@ -3,11 +3,11 @@ kind: Service
 metadata:
   name: {{ include "sftp.fullname" . }}
   labels:
-{{ include "sftp.labels" . | indent 4 }}
-{{- if .Values.service.annotations }}
+    {{- include "sftp.labels" . | nindent 4 }}
+  {{- with .Values.service.annotations }}
   annotations:
-{{ toYaml .Values.service.annotations | indent 4 }}
-{{- end }}
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
 {{- if ne .Values.service.type "NodePort" }}
 {{- if .Values.service.clusterIP }}
@@ -35,5 +35,4 @@ spec:
       protocol: TCP
       name: ssh
   selector:
-    app.kubernetes.io/name: {{ include "sftp.name" . }}
-    app.kubernetes.io/instance: {{ .Release.Name }}
+    {{- include "sftp.selectorLabels" . | nindent 4 }}

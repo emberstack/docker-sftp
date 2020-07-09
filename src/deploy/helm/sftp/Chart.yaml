@@ -1,8 +1,11 @@
-apiVersion: v1
-description: A Helm chart to deploy SFTP
-icon: https://raw.githubusercontent.com/EmberStack/CDN/master/Projects/docker-sftp/openssh.png
+apiVersion: v2
 name: sftp
+description: A Helm chart to deploy SFTP
+type: application
 version: 0.1.0
+appVersion: 0.1.0
+
+icon: https://raw.githubusercontent.com/EmberStack/CDN/master/Projects/docker-sftp/openssh.png
 keywords:
 - sftp
 - openssh
@@ -15,4 +18,3 @@ sources:
 maintainers:
 - name: winromulus
   email: helm-charts@emberstack.com
-engine: gotpl

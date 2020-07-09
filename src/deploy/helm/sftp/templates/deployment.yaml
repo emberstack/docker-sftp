@@ -3,29 +3,32 @@ kind: Deployment
 metadata:
   name: {{ include "sftp.fullname" . }}
   labels:
-{{ include "sftp.labels" . | indent 4 }}
+    {{- include "sftp.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.replicaCount }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "sftp.name" . }}
-      app.kubernetes.io/instance: {{ .Release.Name }}
+      {{- include "sftp.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "sftp.name" . }}
-        app.kubernetes.io/instance: {{ .Release.Name }}
+        {{- include "sftp.selectorLabels" . | nindent 8 }}
     spec:
     {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
     {{- end }}
+      serviceAccountName: {{ include "sftp.serviceAccountName" . }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
       {{- with .Values.initContainers }}
       initContainers:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
         - name: {{ .Chart.Name }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
           {{- if .Values.image.tag }}
           image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
           {{- else }}
@@ -47,7 +50,13 @@ spec:
           {{- with .Values.storage.volumeMounts }}
           {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- end }}
+          {{- end }}    
+          livenessProbe:
+            tcpSocket:
+              port: ssh
+          readinessProbe:
+            tcpSocket:
+              port: ssh
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- if or .Values.configuration .Values.storage.volumes }}
