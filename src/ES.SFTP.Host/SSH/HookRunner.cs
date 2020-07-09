@@ -50,9 +50,21 @@ namespace ES.SFTP.Host.SSH
                 return;
             }
 
+            var execPermissionOutput = await ProcessUtil.QuickRun("bash",
+                $"-c \"if [[ -x {hook} ]]; then echo 'true'; else echo 'false'; fi\"", false);
+
+            if (execPermissionOutput.ExitCode != 0 ||
+                !bool.TryParse(execPermissionOutput.Output, out var isExecutable) || 
+                !isExecutable)
+            {
+                await ProcessUtil.QuickRun("chmod", $"+x {hook}");
+            }
+
             _logger.LogDebug("Executing hook '{hook}'", hook);
-            await ProcessUtil.QuickRun("chmod", $"+x {hook}");
             var hookRun = await ProcessUtil.QuickRun(hook, args, false);
+            var a = new FileInfo(hook);
+            
+
             if (string.IsNullOrWhiteSpace(hookRun.Output))
                 _logger.LogDebug("Hook '{hook}' completed with exit code {exitCode}.", hook, hookRun.ExitCode);
             else
