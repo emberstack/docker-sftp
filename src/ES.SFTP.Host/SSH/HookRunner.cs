@@ -62,8 +62,6 @@ namespace ES.SFTP.Host.SSH
 
             _logger.LogDebug("Executing hook '{hook}'", hook);
             var hookRun = await ProcessUtil.QuickRun(hook, args, false);
-            var a = new FileInfo(hook);
-            
 
             if (string.IsNullOrWhiteSpace(hookRun.Output))
                 _logger.LogDebug("Hook '{hook}' completed with exit code {exitCode}.", hook, hookRun.ExitCode);
