@@ -9,6 +9,15 @@ image:
   tag: ""
   pullPolicy: Always
 
+persistence:
+  enabled: true
+  existingClaim: ""
+  storageClass: ""
+  VolumeName: ""
+  accessMode: ReadWriteOnce
+  size: 100Gi
+  subPath: ""
+
 imagePullSecrets: []
 nameOverride: ""
 fullnameOverride: ""

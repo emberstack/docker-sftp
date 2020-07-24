@@ -39,7 +39,7 @@ spec:
             - name: ssh
               containerPort: 22
               protocol: TCP
-          {{- if or .Values.configuration .Values.storage.volumeMounts }}
+          {{- if or .Values.persistence.enabled .Values.configuration .Values.storage.volumeMounts }}
           volumeMounts:
           {{- if .Values.configuration }}
             - name: sftp-json
@@ -47,6 +47,13 @@ spec:
               subPath: sftp.json
               readOnly: true
           {{- end }}
+          {{- if .Values.persistence.enabled }}
+            - name: data
+              mountPath: /home
+              {{- if .Values.persistence.subPath }}
+              subPath: "{{ .Values.persistence.subPath }}"
+              {{- end }}
+            {{- end }} 
           {{- with .Values.storage.volumeMounts }}
           {{- toYaml . | nindent 12 }}
           {{- end }}
@@ -59,8 +66,15 @@ spec:
               port: ssh
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-      {{- if or .Values.configuration .Values.storage.volumes }}
+      {{- if or .Values.persistence.enabled .Values.configuration .Values.storage.volumes }}
       volumes:
+        {{- if .Values.persistence.enabled }}
+        - name: data
+          persistentVolumeClaim:
+            claimName: {{ .Values.persistence.existingClaim | default (include "sftp.fullname" .) }}
+        {{- else }}
+          emptyDir: {}
+        {{- end }}
       {{- if .Values.configuration }}
         - name: sftp-json
           secret:
