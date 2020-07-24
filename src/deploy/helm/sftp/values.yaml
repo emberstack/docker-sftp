@@ -10,7 +10,7 @@ image:
   pullPolicy: Always
 
 persistence:
-  enabled: true
+  enabled: false
   existingClaim: ""
   storageClass: ""
   VolumeName: ""
