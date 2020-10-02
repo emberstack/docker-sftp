@@ -9,5 +9,10 @@ namespace ES.SFTP.Host.Configuration.Elements
         public LoggingDefinition Logging { get; set; } = new LoggingDefinition();
         public HostKeysDefinition HostKeys { get; set; } = new HostKeysDefinition();
         public HooksDefinition Hooks { get; set; } = new HooksDefinition();
+
+        public string Ciphers { get; set; }
+        public string HostKeyAlgorithms { get; set; }
+        public string KexAlgorithms { get; set; }
+        public string MACs { get; set; }
     }
 }

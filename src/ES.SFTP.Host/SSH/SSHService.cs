@@ -62,7 +62,14 @@ namespace ES.SFTP.Host.SSH
             var sftpConfig = await _mediator.Send(new SftpConfigurationRequest());
             _loggingIgnoreNoIdentificationString = sftpConfig.Global.Logging.IgnoreNoIdentificationString;
 
-            var sshdConfig = new SSHConfiguration();
+            var sshdConfig = new SSHConfiguration
+            {
+                Ciphers = sftpConfig.Global.Ciphers,
+                HostKeyAlgorithms = sftpConfig.Global.HostKeyAlgorithms,
+                KexAlgorithms = sftpConfig.Global.KexAlgorithms,
+                MACs = sftpConfig.Global.MACs,
+            };
+
             var exceptionalUsers = sftpConfig.Users.Where(s => s.Chroot != null).ToList();
 
             var standardDeclarations = new[]

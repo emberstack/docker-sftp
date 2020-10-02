@@ -9,6 +9,11 @@ namespace ES.SFTP.Host.SSH.Configuration
 
         public List<string> AllowUsers { get; } = new List<string>();
 
+        public string Ciphers { get; set; }
+        public string HostKeyAlgorithms { get; set; }
+        public string KexAlgorithms { get; set; }
+        public string MACs { get; set; }
+
         public override string ToString()
         {
             var builder = new StringBuilder();
@@ -21,6 +26,12 @@ namespace ES.SFTP.Host.SSH.Configuration
             builder.AppendLine("# Host Keys");
             builder.AppendLine("HostKey /etc/ssh/ssh_host_ed25519_key");
             builder.AppendLine("HostKey /etc/ssh/ssh_host_rsa_key");
+            builder.AppendLine();
+            builder.AppendLine("# Cryptographic policy");
+            if (!string.IsNullOrWhiteSpace(Ciphers)) builder.AppendLine($"Ciphers {Ciphers}");
+            if (!string.IsNullOrWhiteSpace(HostKeyAlgorithms)) builder.AppendLine($"HostKeyAlgorithms {HostKeyAlgorithms}");
+            if (!string.IsNullOrWhiteSpace(KexAlgorithms)) builder.AppendLine($"KexAlgorithms {KexAlgorithms}");
+            if (!string.IsNullOrWhiteSpace(MACs)) builder.AppendLine($"MACs {MACs }");
             builder.AppendLine();
             builder.AppendLine("# Disable DNS for fast connections");
             builder.AppendLine("UseDNS no");
