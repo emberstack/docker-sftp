@@ -11,6 +11,8 @@ spec:
       {{- include "sftp.selectorLabels" . | nindent 6 }}
   template:
     metadata:
+      annotations:
+        checksum/configuration: {{ include (print $.Template.BasePath "/config-secret.yaml") . | sha256sum }}
       labels:
         {{- include "sftp.selectorLabels" . | nindent 8 }}
     spec:
