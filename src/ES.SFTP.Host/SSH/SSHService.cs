@@ -68,6 +68,8 @@ namespace ES.SFTP.Host.SSH
                 HostKeyAlgorithms = sftpConfig.Global.HostKeyAlgorithms,
                 KexAlgorithms = sftpConfig.Global.KexAlgorithms,
                 MACs = sftpConfig.Global.MACs,
+                MaxStartups = sftpConfig.Global.MaxStartups,
+                MaxSessions = sftpConfig.Global.MaxSessions,
             };
 
             var exceptionalUsers = sftpConfig.Users.Where(s => s.Chroot != null).ToList();

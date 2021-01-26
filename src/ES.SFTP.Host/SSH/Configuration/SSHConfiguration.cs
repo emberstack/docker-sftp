@@ -13,6 +13,8 @@ namespace ES.SFTP.Host.SSH.Configuration
         public string HostKeyAlgorithms { get; set; }
         public string KexAlgorithms { get; set; }
         public string MACs { get; set; }
+        public int MaxStartups { get; set; }
+        public int MaxSessions { get; set; }
 
         public override string ToString()
         {
@@ -32,6 +34,8 @@ namespace ES.SFTP.Host.SSH.Configuration
             if (!string.IsNullOrWhiteSpace(HostKeyAlgorithms)) builder.AppendLine($"HostKeyAlgorithms {HostKeyAlgorithms}");
             if (!string.IsNullOrWhiteSpace(KexAlgorithms)) builder.AppendLine($"KexAlgorithms {KexAlgorithms}");
             if (!string.IsNullOrWhiteSpace(MACs)) builder.AppendLine($"MACs {MACs }");
+            if (!string.IsNullOrWhiteSpace(MaxStartups.ToString())) builder.AppendLine($"MaxStartups {MaxStartups.ToString() }");
+            if (!string.IsNullOrWhiteSpace(MaxSessions.ToString())) builder.AppendLine($"MaxSessions {MaxSessions.ToString() }");
             builder.AppendLine();
             builder.AppendLine("# Disable DNS for fast connections");
             builder.AppendLine("UseDNS no");
