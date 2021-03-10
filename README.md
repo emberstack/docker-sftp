@@ -65,21 +65,21 @@ You can add additional users, default directories or customize start directories
 > Simple Docker CLI run
 
 ```shellsession
-$ docker run -p 22:22 -d emberstack/sftp --name sftp
+$ docker run -p 22:22  --name sftp -d emberstack/sftp
 ```
 This will start a SFTP in the container `sftp` with the default configuration. You can connect to it and login with the `user: demo` and `password: demo`.
 
 > Provide your configuration
 
 ```shellsession
-$ docker run -p 22:22 -d emberstack/sftp --name sftp -v /host/sftp.json:/app/config/sftp.json:ro
+$ docker run -p 22:22 --name sftp -d emberstack/sftp -v /host/sftp.json:/app/config/sftp.json:ro
 ```
 This will override the default (`/app/config/sftp.json`) configuration with the one from the host `/host/sftp.json`.
 
 > Mount a directory from the host for the user 'demo'
 
 ```shellsession
-$ docker run -p 22:22 -d emberstack/sftp --name sftp -v /host/sftp.json:/app/config/sftp.json:ro -v /host/demo:/home/demo/sftp
+$ docker run -p 22:22 --name sftp -d emberstack/sftp -v /host/sftp.json:/app/config/sftp.json:ro -v /host/demo:/home/demo/sftp
 ```
 This will mount the `demo` directory from the host on the `sftp` directory for the "demo" user.
 
