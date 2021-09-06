@@ -34,5 +34,8 @@ spec:
       targetPort: ssh
       protocol: TCP
       name: ssh
+      {{- if .Values.service.nodePort }}
+      nodePort: {{ .Values.service.nodePort }}
+      {{- end }}
   selector:
     {{- include "sftp.selectorLabels" . | nindent 4 }}
