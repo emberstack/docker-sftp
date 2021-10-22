@@ -45,10 +45,10 @@ stages:
 
 
           - script: |
-              cp README.md src/helm/sftp/README.md
+              cp README.md src/deploy/helm/sftp/README.md
             displayName: "helm - import README"
           - script: |
-              helm package --destination $(Build.ArtifactStagingDirectory)/artifacts/helm --version $(Build.BuildNumber) --app-version $(Build.BuildNumber) src/helm/sftp
+              helm package --destination $(Build.ArtifactStagingDirectory)/artifacts/helm --version $(Build.BuildNumber) --app-version $(Build.BuildNumber) src/deploy/helm/sftp
             displayName: "helm - package chart"
          
           - publish: "$(Build.ArtifactStagingDirectory)/artifacts/helm"
