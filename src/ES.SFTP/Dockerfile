@@ -37,4 +37,4 @@ RUN dotnet publish "ES.SFTP.csproj" -c Release -o /app/publish
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["tini", "--", "dotnet", "ES.SFTP.Host.dll"]
+ENTRYPOINT ["tini", "--", "dotnet", "ES.SFTP.dll"]
