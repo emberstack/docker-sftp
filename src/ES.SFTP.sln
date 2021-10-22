@@ -1,9 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29503.13
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31710.8
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ES.SFTP.Host", "ES.SFTP.Host\ES.SFTP.Host.csproj", "{8B58D1A2-7EF0-4888-8BE6-206D8EBE1A7E}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ES.SFTP", "ES.SFTP\ES.SFTP.csproj", "{AA23AF3B-923C-4E65-BC4C-4E5663E29B1F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -11,10 +11,10 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{8B58D1A2-7EF0-4888-8BE6-206D8EBE1A7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{8B58D1A2-7EF0-4888-8BE6-206D8EBE1A7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{8B58D1A2-7EF0-4888-8BE6-206D8EBE1A7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{8B58D1A2-7EF0-4888-8BE6-206D8EBE1A7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA23AF3B-923C-4E65-BC4C-4E5663E29B1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA23AF3B-923C-4E65-BC4C-4E5663E29B1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA23AF3B-923C-4E65-BC4C-4E5663E29B1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA23AF3B-923C-4E65-BC4C-4E5663E29B1F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
