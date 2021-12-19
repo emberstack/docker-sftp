@@ -1,0 +1,13 @@
+version: '3'
+services:
+  sftp:
+    image: "emberstack/sftp:dev"
+    build:
+      context: ../
+      dockerfile: ES.SFTP.Host/Dockerfile
+    ports:
+      - "2222:22"
+    volumes:
+    - ../samples/sample.dev.sftp.json:/app/config/sftp.json:ro
+    - ../samples/.ssh/id_demo2_rsa.pub:/home/demo2/.ssh/keys/id_rsa.pub:ro
+    - ../samples/.ssh/id_demo2_ed25519.pub:/home/demo2/.ssh/keys/id_ed25519.pub:ro
