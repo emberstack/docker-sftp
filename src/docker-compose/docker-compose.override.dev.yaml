@@ -3,7 +3,7 @@ services:
   sftp:
     image: "emberstack/sftp:dev"
     build:
-      context: ../../
+      context: ../
       dockerfile: ES.SFTP.Host/Dockerfile
     ports:
       - "2222:22"
