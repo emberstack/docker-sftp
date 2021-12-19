@@ -68,7 +68,7 @@ try
         container.RegisterType<SSHService>().AsImplementedInterfaces().SingleInstance();
     });
 
-    builder.WebHost.UseUrls("http://*:25080");
+    builder.WebHost.ConfigureKestrel(options => { options.ListenLocalhost(25080); });
 
 
     var app = builder.Build();
