@@ -71,6 +71,21 @@ public class UserManagementService : IHostedService, INotificationHandler<Config
             await UserUtil.UserDelete(user, false);
         }
 
+        //Create groups as specified by the GID value for each user
+        foreach (var user in config.Users)
+        {
+            if (user.GID.HasValue)
+            {
+                _logger.LogInformation("Processing GID for user '{user}'", user.Username);
+
+                var virtualGroup = $"sftp-gid-{user.GID.Value}";
+                if (!await GroupUtil.GroupExists(virtualGroup))
+                {
+                    _logger.LogDebug("Creating group '{group}' with GID '{gid}'", virtualGroup, user.GID.Value);
+                    await GroupUtil.GroupCreate(virtualGroup, true, user.GID.Value);
+                }
+            }
+        }
 
         foreach (var user in config.Users)
         {
@@ -79,7 +94,7 @@ public class UserManagementService : IHostedService, INotificationHandler<Config
             if (!await UserUtil.UserExists(user.Username))
             {
                 _logger.LogDebug("Creating user '{user}'", user.Username);
-                await UserUtil.UserCreate(user.Username, true);
+                await UserUtil.UserCreate(user.Username, true, user.GID);
                 _logger.LogDebug("Adding user '{user}' to '{group}'", user.Username, SftpUserInventoryGroup);
                 await GroupUtil.GroupAddUser(SftpUserInventoryGroup, user.Username);
             }
@@ -92,19 +107,6 @@ public class UserManagementService : IHostedService, INotificationHandler<Config
             {
                 _logger.LogDebug("Updating the UID for user '{user}'", user.Username);
                 await UserUtil.UserSetId(user.Username, user.UID.Value);
-            }
-
-            if (user.GID.HasValue)
-            {
-                var virtualGroup = $"sftp-gid-{user.GID.Value}";
-                if (!await GroupUtil.GroupExists(virtualGroup))
-                {
-                    _logger.LogDebug("Creating group '{group}' with GID '{gid}'", virtualGroup, user.GID.Value);
-                    await GroupUtil.GroupCreate(virtualGroup, true, user.GID.Value);
-                }
-
-                _logger.LogDebug("Adding user '{user}' to '{group}'", user.Username, virtualGroup);
-                await GroupUtil.GroupAddUser(virtualGroup, user.Username);
             }
 
             var homeDir = Directory.CreateDirectory(Path.Combine(HomeBasePath, user.Username));
