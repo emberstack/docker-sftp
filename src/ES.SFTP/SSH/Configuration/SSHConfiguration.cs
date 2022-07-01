@@ -10,6 +10,7 @@ public class SSHConfiguration
 
     public string Ciphers { get; set; }
     public string HostKeyAlgorithms { get; set; }
+    public string PubkeyAcceptedAlgorithms { get; set; }
     public string KexAlgorithms { get; set; }
     public string MACs { get; set; }
 
@@ -29,6 +30,7 @@ public class SSHConfiguration
         builder.AppendLine("# Cryptographic policy");
         if (!string.IsNullOrWhiteSpace(Ciphers)) builder.AppendLine($"Ciphers {Ciphers}");
         if (!string.IsNullOrWhiteSpace(HostKeyAlgorithms)) builder.AppendLine($"HostKeyAlgorithms {HostKeyAlgorithms}");
+        if (!string.IsNullOrWhiteSpace(PubkeyAcceptedAlgorithms)) builder.AppendLine($"PubkeyAcceptedAlgorithms {PubkeyAcceptedAlgorithms}");
         if (!string.IsNullOrWhiteSpace(KexAlgorithms)) builder.AppendLine($"KexAlgorithms {KexAlgorithms}");
         if (!string.IsNullOrWhiteSpace(MACs)) builder.AppendLine($"MACs {MACs}");
         builder.AppendLine();

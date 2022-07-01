@@ -10,6 +10,7 @@ public class GlobalConfiguration
 
     public string Ciphers { get; set; }
     public string HostKeyAlgorithms { get; set; }
+    public string PubkeyAcceptedAlgorithms { get; set; }
     public string KexAlgorithms { get; set; }
     public string MACs { get; set; }
 }

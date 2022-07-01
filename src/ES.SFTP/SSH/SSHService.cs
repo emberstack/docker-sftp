@@ -63,6 +63,7 @@ public class SSHService : IHostedService, INotificationHandler<ConfigurationChan
         {
             Ciphers = sftpConfig.Global.Ciphers,
             HostKeyAlgorithms = sftpConfig.Global.HostKeyAlgorithms,
+            PubkeyAcceptedAlgorithms = sftpConfig.Global.PubkeyAcceptedAlgorithms,
             KexAlgorithms = sftpConfig.Global.KexAlgorithms,
             MACs = sftpConfig.Global.MACs
         };
