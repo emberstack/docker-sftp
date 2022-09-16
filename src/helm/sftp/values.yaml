@@ -63,7 +63,6 @@ tolerations: []
 affinity: {}
 
 ingresses: []
-  
 # - name: ingress
 #   annotations: {}
 #     # kubernetes.io/ingress.class: nginx
@@ -75,3 +74,34 @@ ingresses: []
 #     - secretName: chart-example-tls
 #       hosts:
 #           - chart-example.local
+
+
+persistence:
+  ## If true, sftp will create/use a Persistent Volume Claim
+  ## If false, use emptyDir
+  ##
+  enabled: false
+
+  ## matomo data Persistent Volume access modes
+  ## Must match those of existing PV or dynamic provisioner
+  ## Ref: http://kubernetes.io/docs/user-guide/persistent-volumes/
+  ##
+  accessModes:
+    - ReadWriteOnce
+
+  ## matomo data Persistent Volume Claim annotations
+  ##
+  annotations: {}
+
+  ## matomo data Persistent Volume existing claim name
+  ## Requires matomo.persistentVolume.enabled: true
+  ## If defined, PVC must be created manually before volume will be bound
+  existingClaim: ""
+
+  ## matomo data Persistent Volume mount root path
+  ##
+  mountPath: /sftp
+
+  ## matomo data Persistent Volume size
+  ##
+  size: 30Gi

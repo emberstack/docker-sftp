@@ -41,6 +41,11 @@ spec:
               protocol: TCP
           {{- if or .Values.configuration .Values.storage.volumeMounts }}
           volumeMounts:
+          {{- if and .Values.persistence.enabled }}
+          - name: data
+              mountPath: "{{ .Values.persistence.mountPath }}"
+              subPath: "{{ .Values.persistence.subPath }}"
+          {{- end }}    
           {{- if .Values.configuration }}
             - name: sftp-json
               mountPath: "/app/config/sftp.json"
@@ -61,6 +66,11 @@ spec:
             {{- toYaml .Values.resources | nindent 12 }}
       {{- if or .Values.configuration .Values.storage.volumes }}
       volumes:
+      {{- if and .Values.persistence.enabled }}
+      - name: data
+        persistentVolumeClaim:
+          claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "sftp.fullname" . }}{{- end }}
+      {{- else }}
       {{- if .Values.configuration }}
         - name: sftp-json
           secret:

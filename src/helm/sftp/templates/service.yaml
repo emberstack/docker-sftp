@@ -36,3 +36,48 @@ spec:
       name: ssh
   selector:
     {{- include "sftp.selectorLabels" . | nindent 4 }}
+
+{{- if .Values.extraServices -}}
+apiVersion: v1
+kind: List
+items:
+  {{- range .Values.extraServices }}
+    kind: Service
+    metadata:
+        name: {{ .name }}
+        labels:
+            {{- include "sftp.labels" . | nindent 4 }}
+        {{- with .annotations }}
+        annotations:
+            {{- toYaml . | nindent 4 }}
+        {{- end }}
+    spec:
+        {{- if ne .type "NodePort" }}
+        {{- if .clusterIP }}
+        clusterIP: "{{ .clusterIP }}"
+        {{- end }}
+        {{- end }}
+        {{- if .externalIPs }}
+        externalIPs:
+        {{ toYaml .externalIPs | indent 4 }}
+        {{- end }}
+        {{- if .loadBalancerIP }}
+        loadBalancerIP: "{{ .loadBalancerIP }}"
+        {{- end }}
+        {{- if .loadBalancerSourceRanges }}
+        loadBalancerSourceRanges:
+        {{ toYaml .loadBalancerSourceRanges | indent 4 }}
+        {{- end }}
+        {{- if and (semverCompare ">=1.7-0" .Capabilities.KubeVersion.GitVersion) (.externalTrafficPolicy) }}
+        externalTrafficPolicy: "{{ .externalTrafficPolicy }}"
+        {{- end }}
+        type: {{ .type }}
+        ports:
+            - port: {{ .port }}
+            targetPort: ssh
+            protocol: TCP
+            name: ssh
+        selector:
+            {{- include "sftp.selectorLabels" . | nindent 4 }}
+    {{- end }}
+{{- end }}
