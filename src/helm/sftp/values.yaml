@@ -72,7 +72,6 @@ ingresses: []
 #     - host: chart-example.local
 #       paths: [ / ]
 #   tls:
-#     default:
-#       - secretName: chart-example-tls
-#         hosts:
+#     - secretName: chart-example-tls
+#       hosts:
 #           - chart-example.local

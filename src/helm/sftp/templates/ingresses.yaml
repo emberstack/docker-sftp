@@ -15,9 +15,9 @@ items:
         {{- toYaml . | nindent 4 }}
       {{- end }}
     spec:
-      {{- if .tls.default }}
+      {{- if .tls }}
       tls:
-        {{- range .tls.default }}
+        {{- range .tls }}
         - hosts:
             {{- range .hosts }}
             - {{ . | quote }}
