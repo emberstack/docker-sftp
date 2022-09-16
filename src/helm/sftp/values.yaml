@@ -62,11 +62,9 @@ tolerations: []
 
 affinity: {}
 
-ingress:
-  enabled: false
-  # types are default and traefik
-  type: default
-  annotations: {}
+ingress: 
+  
+- annotations: {}
     # kubernetes.io/ingress.class: nginx
     # kubernetes.io/tls-acme: "true"
   hosts:
