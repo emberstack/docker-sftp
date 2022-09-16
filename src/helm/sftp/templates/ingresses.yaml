@@ -7,7 +7,7 @@ items:
   {{- range .Values.ingresses }}
     kind: Ingress
     metadata:
-      name: {{ $fullName }}
+      name: {{ .name }}
       labels:
         {{- include "sftp.labels" . | nindent 4 }}
       {{- with .annotations }}
