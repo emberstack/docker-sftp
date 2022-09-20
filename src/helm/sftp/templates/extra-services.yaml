@@ -1,0 +1,42 @@
+{{- if .Values.extraServices -}}
+{{- $labels := include "sftp.labels" . -}}
+{{- $selectorLabels := include "sftp.selectorLabels" . -}}
+apiVersion: v1
+kind: List
+items:
+  {{- range .Values.extraServices }}
+  - apiVersion: v1
+    kind: Service
+    metadata:
+        name: {{ .name }}
+        labels: {{ $labels | nindent 12 }}
+        {{- with .annotations }}
+        annotations:
+            {{- toYaml . | nindent 12 }}
+        {{- end }}
+    spec:
+        {{- if ne .type "NodePort" }}
+        {{- if .clusterIP }}
+        clusterIP: "{{ .clusterIP }}"
+        {{- end }}
+        {{- end }}
+        {{- if .externalIPs }}
+        externalIPs:
+        {{ toYaml .externalIPs | indent 4 }}
+        {{- end }}
+        {{- if .loadBalancerIP }}
+        loadBalancerIP: "{{ .loadBalancerIP }}"
+        {{- end }}
+        {{- if .loadBalancerSourceRanges }}
+        loadBalancerSourceRanges:
+        {{ toYaml .loadBalancerSourceRanges | indent 4 }}
+        {{- end }}
+        type: {{ .type }}
+        ports:
+        - port: {{ .port }}
+          targetPort: ssh
+          protocol: TCP
+          name: ssh
+        selector:  {{ $selectorLabels | nindent 12 }}
+  {{- end }}
+{{- end }}
