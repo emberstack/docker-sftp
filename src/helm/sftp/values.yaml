@@ -98,7 +98,7 @@ persistence:
   ## matomo data Persistent Volume existing claim name
   ## Requires matomo.persistentVolume.enabled: true
   ## If defined, PVC must be created manually before volume will be bound
-  existingClaim: ""
+  # existingClaim: ""
 
   ## matomo data Persistent Volume mount root path
   ##
