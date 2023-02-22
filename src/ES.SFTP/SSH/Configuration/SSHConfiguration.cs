@@ -45,7 +45,7 @@ public class SSHConfiguration
         builder.AppendLine("# Allowed users");
         builder.AppendLine($"AllowUsers {string.Join(" ", AllowUsers)}");
         builder.AppendLine();
-        if (!string.IsNullOrWhiteSpace(PKIandPassword)) builder.AppendLine("AuthenticationMethods \"publickey,password\"");
+        if (PKIandPassword == "true") builder.AppendLine("AuthenticationMethods \"publickey,password\"");
         builder.AppendLine();
         builder.AppendLine("# Match blocks");
         foreach (var matchBlock in MatchBlocks)
