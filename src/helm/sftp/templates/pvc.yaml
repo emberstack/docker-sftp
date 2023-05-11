@@ -21,6 +21,7 @@ spec:
   {{- end }}
   {{- end }}
   {{- if .Values.persistence.volumeBindingMode }}
+  volumeName: "{{ .Values.persistence.volumeName }}"
   volumeBindingModeName: "{{ .Values.persistence.volumeBindingMode }}"
   {{- end }}
   {{- if .Values.persistence.selector }}
