@@ -64,7 +64,8 @@ public class SSHService : IHostedService, INotificationHandler<ConfigurationChan
             Ciphers = sftpConfig.Global.Ciphers,
             HostKeyAlgorithms = sftpConfig.Global.HostKeyAlgorithms,
             KexAlgorithms = sftpConfig.Global.KexAlgorithms,
-            MACs = sftpConfig.Global.MACs
+            MACs = sftpConfig.Global.MACs,
+            PKIandPassword = sftpConfig.Global.PKIandPassword
         };
 
         var exceptionalUsers = sftpConfig.Users.Where(s => s.Chroot != null).ToList();

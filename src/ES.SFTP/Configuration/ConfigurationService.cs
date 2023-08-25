@@ -68,6 +68,7 @@ public class ConfigurationService : IHostedService, IRequestHandler<SftpConfigur
         config.Global.Directories ??= new List<string>();
         config.Global.Logging ??= new LoggingDefinition();
         config.Global.Chroot ??= new ChrootDefinition();
+        config.Global.PKIandPassword ??= new string("");
         config.Global.HostKeys ??= new HostKeysDefinition();
         config.Global.Hooks ??= new HooksDefinition();
 
