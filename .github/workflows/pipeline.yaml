@@ -25,12 +25,6 @@ jobs:
       - name: tools - helm - install
         uses: azure/setup-helm@v1
 
-      - name: tools - docker - login
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.ES_DOCKERHUB_USERNAME }}
-          password: ${{ secrets.ES_DOCKERHUB_PAT }}
-
       - name: checkout
         uses: actions/checkout@v2
 
@@ -50,18 +44,37 @@ jobs:
           name: helm
           path: .artifacts/helm
 
-
-      - name: "docker - build and publish"
+      - name: "docker - build PR"
+        if: github.event_name == 'pull_request'
         run: |
           docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
           docker buildx create --name builder --driver docker-container --use
           docker buildx inspect --bootstrap
-          docker buildx build --push --platform linux/amd64 -t ${{env.imageRepository}}:build-${{env.version}}-amd64   -f src/ES.SFTP/Dockerfile src/
-          docker buildx build --push --platform linux/arm   -t ${{env.imageRepository}}:build-${{env.version}}-arm32v7 -f src/ES.SFTP/Dockerfile src/
-          docker buildx build --push --platform linux/arm64 -t ${{env.imageRepository}}:build-${{env.version}}-arm64v8 -f src/ES.SFTP/Dockerfile src/
-          docker pull ${{env.imageRepository}}:build-${{env.version}}-amd64
-          docker pull ${{env.imageRepository}}:build-${{env.version}}-arm32v7
-          docker pull ${{env.imageRepository}}:build-${{env.version}}-arm64v8
+          docker buildx build --platform linux/amd64 -t ${{env.imageRepository}}:build-${{env.version}}-amd64   -f src/ES.SFTP/Dockerfile src/
+          docker buildx build --platform linux/arm   -t ${{env.imageRepository}}:build-${{env.version}}-arm32v7 -f src/ES.SFTP/Dockerfile src/
+          docker buildx build --platform linux/arm64 -t ${{env.imageRepository}}:build-${{env.version}}-arm64v8 -f src/ES.SFTP/Dockerfile src/
+
+      - name: tools - docker - login
+        if: github.event_name == 'push'
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.ES_DOCKERHUB_USERNAME }}
+          password: ${{ secrets.ES_DOCKERHUB_PAT }}
+
+
+
+      - name: "docker - build and publish"
+        if: github.event_name == 'push'
+        run: |
+          docker run --rm --privileged multiarch/qemu-user-static --reset -p yes
+          docker buildx create --name builder --driver docker-container --use
+          docker buildx inspect --bootstrap
+          docker buildx build --push --platform linux/amd64 --provenance=false -t ${{env.imageRepository}}:build-${{env.version}}-amd64   -f src/ES.SFTP/Dockerfile src/
+          docker buildx build --push --platform linux/arm   --provenance=false -t ${{env.imageRepository}}:build-${{env.version}}-arm32v7 -f src/ES.SFTP/Dockerfile src/
+          docker buildx build --push --platform linux/arm64 --provenance=false -t ${{env.imageRepository}}:build-${{env.version}}-arm64v8 -f src/ES.SFTP/Dockerfile src/
+          docker pull --platform linux/amd64 ${{env.imageRepository}}:build-${{env.version}}-amd64
+          docker pull --platform linux/arm/v7 ${{env.imageRepository}}:build-${{env.version}}-arm32v7
+          docker pull --platform linux/arm64 ${{env.imageRepository}}:build-${{env.version}}-arm64v8
           docker manifest create  ${{env.imageRepository}}:build-${{env.version}} ${{env.imageRepository}}:build-${{env.version}}-amd64  ${{env.imageRepository}}:build-${{env.version}}-arm32v7  ${{env.imageRepository}}:build-${{env.version}}-arm64v8
           docker manifest inspect ${{env.imageRepository}}:build-${{env.version}}
           docker manifest push    ${{env.imageRepository}}:build-${{env.version}}
