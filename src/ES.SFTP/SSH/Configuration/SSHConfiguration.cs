@@ -12,6 +12,7 @@ public class SSHConfiguration
     public string HostKeyAlgorithms { get; set; }
     public string KexAlgorithms { get; set; }
     public string MACs { get; set; }
+    public string PKIandPassword { get; set; }
 
     public override string ToString()
     {
@@ -43,6 +44,8 @@ public class SSHConfiguration
         builder.AppendLine();
         builder.AppendLine("# Allowed users");
         builder.AppendLine($"AllowUsers {string.Join(" ", AllowUsers)}");
+        builder.AppendLine();
+        if (PKIandPassword == "true") builder.AppendLine("AuthenticationMethods \"publickey,password\"");
         builder.AppendLine();
         builder.AppendLine("# Match blocks");
         foreach (var matchBlock in MatchBlocks)

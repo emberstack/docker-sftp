@@ -7,6 +7,7 @@ public class GlobalConfiguration
     public LoggingDefinition Logging { get; set; } = new();
     public HostKeysDefinition HostKeys { get; set; } = new();
     public HooksDefinition Hooks { get; set; } = new();
+    public string PKIandPassword { get; set; }
 
     public string Ciphers { get; set; }
     public string HostKeyAlgorithms { get; set; }
