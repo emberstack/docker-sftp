@@ -10,10 +10,10 @@ public class UserUtil
         return command.ExitCode == 0 && !string.IsNullOrWhiteSpace(command.Output);
     }
 
-    public static async Task UserCreate(string username, bool noLoginShell = false)
+    public static async Task UserCreate(string username, bool noLoginShell = false, int? gid = null)
     {
         await ProcessUtil.QuickRun("useradd",
-            $"--comment {username} {(noLoginShell ? "-s /usr/sbin/nologin" : string.Empty)} {username}");
+            $"--comment {username} {(noLoginShell ? "-s /usr/sbin/nologin " : string.Empty)}{(gid.HasValue ? "-g " + gid.Value + " " : string.Empty)}{username}");
     }
 
     public static async Task UserDelete(string username, bool throwOnError = true)
