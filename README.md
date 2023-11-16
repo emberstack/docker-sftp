@@ -10,7 +10,7 @@ This project provides a Docker image for hosting a SFTP server. Included are `Do
 > Supports architectures: `amd64`, `arm` and `arm64`
 
 ### Support
-If you need help or found a bug, please feel free to open an issue on the [emberstack/docker-sftp](https://github.com/emberstack/docker-sftp) GitHub project.  
+If you need help or found a bug, please feel free to open an issue on the [emberstack/docker-sftp](https://github.com/emberstack/docker-sftp) GitHub project.
 
 ## Usage
 
@@ -49,8 +49,8 @@ Below is the simplest configuration file for the SFTP server:
     ]
 }
 ```
-This configuration creates a user `demo` with the password `demo`. 
-A directory "sftp" is created for each user in the own home and is accessible for read/write. 
+This configuration creates a user `demo` with the password `demo`.
+A directory "sftp" is created for each user in the own home and is accessible for read/write.
 The user is `chrooted` to the `/home/demo` directory. Upon connect, the start directory is `sftp`.
 
 You can add additional users, default directories or customize start directories per user. You can also define the `UID` and `GID` for each user. See the `Advanced Configuration` section below for all configuration options.
@@ -61,21 +61,21 @@ You can add additional users, default directories or customize start directories
 > Simple Docker CLI run
 
 ```shellsession
-$ docker run -p 22:22 -d emberstack/sftp --name sftp
+$ docker run -p 22:22 -d --name sftp emberstack/sftp
 ```
 This will start a SFTP in the container `sftp` with the default configuration. You can connect to it and login with the `user: demo` and `password: demo`.
 
 > Provide your configuration
 
 ```shellsession
-$ docker run -p 22:22 -d emberstack/sftp --name sftp -v /host/sftp.json:/app/config/sftp.json:ro
+$ docker run -p 22:22 -d --name sftp -v /host/sftp.json:/app/config/sftp.json:ro emberstack/sftp
 ```
 This will override the default (`/app/config/sftp.json`) configuration with the one from the host `/host/sftp.json`.
 
 > Mount a directory from the host for the user 'demo'
 
 ```shellsession
-$ docker run -p 22:22 -d emberstack/sftp --name sftp -v /host/sftp.json:/app/config/sftp.json:ro -v /host/demo:/home/demo/sftp
+$ docker run -p 22:22 -d --name sftp -v /host/sftp.json:/app/config/sftp.json:ro -v /host/demo:/home/demo/sftp emberstack/sftp
 ```
 This will mount the `demo` directory from the host on the `sftp` directory for the "demo" user.
 
