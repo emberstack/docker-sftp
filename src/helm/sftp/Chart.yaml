@@ -2,7 +2,7 @@ apiVersion: v2
 name: sftp
 description: A Helm chart to deploy SFTP
 type: application
-version: 0.2.1
+version: 0.2.2
 appVersion: 5.1.5
 
 icon: https://raw.githubusercontent.com/EmberStack/CDN/master/Projects/docker-sftp/openssh.png

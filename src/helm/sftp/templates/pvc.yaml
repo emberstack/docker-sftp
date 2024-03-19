@@ -20,9 +20,9 @@ spec:
   storageClassName: "{{ .Values.persistence.storageClass }}"
   {{- end }}
   {{- end }}
-  {{- if .Values.persistence.volumeBindingMode }}
-  volumeName: "{{ .Values.persistence.storageClass }}"
-  volumeBindingModeName: "{{ .Values.persistence.volumeBindingMode }}"
+  volumeName: "{{ .Values.persistence.volumeName }}"
+  {{- if .Values.persistence.volumeBindingModeName }}
+  volumeBindingModeName: "{{ .Values.persistence.volumeBindingModeName }}"
   {{- end }}
   {{- if .Values.persistence.selector }}
   selector: {{- include "common.tplvalues.render" (dict "value" .Values.persistence.selector "context" $) | nindent 4 }}
