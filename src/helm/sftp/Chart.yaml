@@ -5,7 +5,7 @@ type: application
 version: 0.1.0
 appVersion: 0.1.0
 
-icon: https://raw.githubusercontent.com/EmberStack/CDN/master/Projects/docker-sftp/openssh.png
+icon: https://raw.githubusercontent.com/emberstack/CDN/main/projects/docker-sftp/openssh.png
 keywords:
 - sftp
 - openssh

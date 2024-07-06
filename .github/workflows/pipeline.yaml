@@ -139,16 +139,15 @@ jobs:
           repository: emberstack/helm-charts
           token:  ${{ secrets.ES_GITHUB_PAT }}
           path: helm-charts
+          ref: main
 
 
       - name: github - publish - chart
         run: |
-          mkdir -p helm-charts/charts
-          cp .artifacts/helm/sftp-${{env.version}}.tgz  helm-charts/charts
+          mkdir -p helm-charts/repository/sftp
+          cp .artifacts/helm/sftp-${{env.version}}.tgz  helm-charts/repository/sftp
 
           cd helm-charts
-          rm -f index.yaml
-          helm repo index ./
 
           git config user.name "Romeo Dumitrescu"
           git config user.email "5931333+winromulus@users.noreply.github.com"
