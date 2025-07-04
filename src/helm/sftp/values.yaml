@@ -38,6 +38,15 @@ storage:
   volumeMounts: []
   volumes: []
 
+persistentVolumeClaim: []
+  # - name: sftp-files
+  #   accessModes:
+  #     - ReadWriteOnce
+  #   resources:
+  #     requests:
+  #       storage: 1Gi
+  #   storageClassName: ''
+
 initContainers: []
 
 service:

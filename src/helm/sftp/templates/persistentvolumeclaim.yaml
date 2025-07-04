@@ -1,0 +1,22 @@
+{{- if .Values.persistentVolumeClaim }}
+{{- $labels := include "sftp.labels" . }}
+{{- range .Values.persistentVolumeClaim }}
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: {{ .name }}
+  labels:
+    {{- $labels | nindent 4 }}
+    app.kubernetes.io/component: {{ .name }}
+spec:
+  accessModes: {{ toYaml .accessModes | nindent 4 }}
+  {{- if .storageClassName }}
+  storageClassName: {{ .storageClassName | quote }}
+  {{- end }}
+  {{- if .resources }}
+  resources:
+    {{- toYaml .resources | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
