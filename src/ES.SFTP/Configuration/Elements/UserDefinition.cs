@@ -15,4 +15,7 @@ public class UserDefinition
     public ChrootDefinition Chroot { get; set; } = new();
     public List<string> Directories { get; set; } = new();
     public List<string> PublicKeys { get; set; } = new();
+
+    // Umask property for user-specific file permissions
+    public string Umask { get; set; }
 }

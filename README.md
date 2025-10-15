@@ -140,6 +140,7 @@ You can customize the values of the helm deployment by using the following Value
 | `configuration.Users[].GID`                                 | Sets the user's GID. A group is created for this value and the user is included  | `null`                                                  |
 | `configuration.Users[].Chroot`                              | If set, will override global `Chroot` settings for this user.                    | `null`                                                  |
 | `configuration.Users[].Directories`                         | Array of additional directories created for this user                            | `null`                                                  |
+| `configuration.Users[].Umask`                               | If set, will set a user-specific `umask` value for this user.                    | `null`                                                  |
 | `initContainers`                                            | Additional initContainers for the pod                                            | `{}`                                                    |
 | `resources`                                                 | Resource limits                                                                  | `{}`                                                    |
 | `nodeSelector`                                              | Node labels for pod assignment                                                   | `{}`                                                    |

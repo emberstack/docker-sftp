@@ -68,7 +68,8 @@ public class SSHService : IHostedService, INotificationHandler<ConfigurationChan
             PKIandPassword = sftpConfig.Global.PKIandPassword
         };
 
-        var exceptionalUsers = sftpConfig.Users.Where(s => s.Chroot != null).ToList();
+        var exceptionalChrootUsers = sftpConfig.Users.Where(s => s.Chroot != null).ToList();
+        var exceptionalUmaskUsers = sftpConfig.Users.Where(s => !string.IsNullOrWhiteSpace(s.Umask)).ToList();
 
         var standardDeclarations = new[]
         {
@@ -82,7 +83,17 @@ public class SSHService : IHostedService, INotificationHandler<ConfigurationChan
                 : s.Username)
         );
 
-        sshdConfig.MatchBlocks.AddRange(exceptionalUsers.Select(s => new MatchBlock
+        sshdConfig.MatchBlocks.AddRange(exceptionalUmaskUsers.Select(s => new MatchBlock
+        {
+            Criteria = MatchBlock.MatchCriteria.User,
+            Match = {s.Username},
+            Declarations = new List<string>(standardDeclarations)
+            {
+                $"ForceCommand internal-sftp -u {s.Umask}"
+            }
+        }));
+
+        sshdConfig.MatchBlocks.AddRange(exceptionalChrootUsers.Select(s => new MatchBlock
         {
             Criteria = MatchBlock.MatchCriteria.User,
             Match = {s.Username},
@@ -99,7 +110,7 @@ public class SSHService : IHostedService, INotificationHandler<ConfigurationChan
         {
             Criteria = MatchBlock.MatchCriteria.User,
             Match = {"*"},
-            //Except = exceptionalUsers.Select(s => s.Username).ToList(),
+            //Except = exceptionalChrootUsers.Select(s => s.Username).ToList(),
             Declarations = new List<string>(standardDeclarations)
             {
                 $"ChrootDirectory {sftpConfig.Global.Chroot.Directory}",
